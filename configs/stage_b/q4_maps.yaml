@@ -1,0 +1,16 @@
+# Q4 maps without ground truth (queue core gate): box, click grown by feature similarity, saliency (CLS attention) from a
+# cheap 224-pixel pass (its cost added), against the true map and uniform ToMe; VOC 2012 val, largest object class.
+run_id: q4-maps
+seed: 0
+resolutions: [448, 896]
+dtype: bfloat16
+chunk: 32
+image_list: voc_val
+a0_runs: runs/stage_a/a0
+out: runs/stage_b/q4
+click_sim: adaptive
+saliency_top: 0.3
+maps: [gt, box, click, saliency]
+methods:
+  448: [itome_l0.3_t0.01_floor64_dil1_noprop, itome_l0.5_t0.01_floor64_dil1_noprop, tome_r48_from1_noprop, tome_r56_from1_noprop, tome_r64_from1_noprop]
+  896: [itome_l0.3_t0.01_floor256_dil1_noprop, itome_l0.5_t0.01_floor256_dil1_noprop, tome_r224_from1_noprop, tome_r288_from1_noprop, tome_r320_from1_noprop]

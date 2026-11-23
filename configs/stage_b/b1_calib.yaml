@@ -1,0 +1,27 @@
+# Stage B, B1: calibration sweeps (plan docs/records/STAGE_B_EFFICIENCY_PLAN.md). 256 ImageNet-100 val + 256 VOC val
+# images (the Stage A calibration list), same stratified order and chunks as a2g-calib so the oracle reuses its partitions.
+run_id: b1-calib
+seed: 0
+resolutions: [448, 896]
+dtype: bfloat16          # linear layers and MLP; attention in fp32
+batch: {448: 16, 896: 4}
+stride: 4
+chunk: 32
+knn: {k: 20, temperature: 0.07}
+a0_cache: /work/stage_a/a0       # dense kNN banks
+a0_runs: runs/stage_a/a0         # dense VOC probes
+trees_dir: /work/stage_a/trees_graph
+out: runs/stage_b/b1
+methods:
+  448:
+    tome: {r: [4, 8, 16, 24, 32], first: [0, 4]}
+    prune: {keep: [0.9, 0.8, 0.7, 0.6, 0.5], at: [[3, 6, 9]], restore: [null, 11]}
+    group: {clusters: [4, 8, 16], m: [1, 2], tau: [null, 0.2, 0.35]}
+    oracle: [eps0.03, eps0.05, eps0.07, eps0.1]
+    windows: [7, 14]
+  896:
+    tome: {r: [16, 32, 64, 96, 128], first: [0, 4]}
+    prune: {keep: [0.9, 0.8, 0.7, 0.6, 0.5], at: [[3, 6, 9]], restore: [null, 11]}
+    group: {clusters: [4, 8, 16, 32], m: [1, 2], tau: [null, 0.2, 0.35]}
+    oracle: [eps0.02, eps0.025, eps0.03, eps0.04]
+    windows: [7, 14, 28]

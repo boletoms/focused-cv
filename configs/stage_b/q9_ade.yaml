@@ -1,0 +1,13 @@
+# Q9 breadth (queue): ADE20K val, regions of any kind (largest region, random region) as the region of interest;
+# focus budget (true map and box) against uniform ToMe without proportional attention. Probe trained on 2,000 ADE
+# training images (python -m src.stage_b.ade probe <res>).
+run_id: q9-ade
+seed: 0
+resolutions: [448, 896]
+chunk: 50
+max_images: 1000
+out: runs/stage_b/q9_ade
+maps: [gt, box]
+methods:
+  448: [tome_r48_from1_noprop, tome_r56_from1_noprop, tome_r64_from1_noprop, itome_l0.3_t0.01_floor64_dil1_noprop, itome_l0.5_t0.01_floor64_dil1_noprop]
+  896: [tome_r224_from1_noprop, tome_r288_from1_noprop, tome_r320_from1_noprop, itome_l0.3_t0.01_floor256_dil1_noprop, itome_l0.5_t0.01_floor256_dil1_noprop]

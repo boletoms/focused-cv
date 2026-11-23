@@ -1,0 +1,310 @@
+{
+ "backbone": "vitb",
+ "setting": "titome_t0.95_l0.7_floor128_dil2_cls64~algm_t0.95@exp-pix-mot-rl-r0-e0.06-ring-srch-f0.05-o1",
+ "rows": {
+  "dense": {
+   "ms_per_frame": 5.684895992279053,
+   "ms_iqr": [
+    5.682824015617371,
+    5.687072157859802
+   ],
+   "frames": 114,
+   "speedup_vs_dense_graph": 1.0
+  },
+  "ALGM_csv": {
+   "ms_per_frame": 3.136304020881653,
+   "ms_iqr": [
+    2.4418879747390747,
+    3.6117119789123535
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.15397308762217504,
+   "overflow_share": 0.0,
+   "fallback_share": 0.0,
+   "graphs": 157,
+   "speedup_vs_dense_graph": 1.8126099875613972
+  },
+  "L_csv": {
+   "ms_per_frame": 3.5463039875030518,
+   "ms_iqr": [
+    3.210831940174103,
+    4.1157121658325195
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.13077315996172326,
+   "overflow_share": 0.13157894736842105,
+   "fallback_share": 0.0,
+   "graphs": 256,
+   "speedup_vs_dense_graph": 1.6030481347093375
+  },
+  "L_csv16": {
+   "ms_per_frame": 3.5682560205459595,
+   "ms_iqr": [
+    3.12308007478714,
+    4.138240218162537
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.13081197731973002,
+   "overflow_share": 0.15789473684210525,
+   "fallback_share": 0.0,
+   "graphs": 450,
+   "speedup_vs_dense_graph": 1.5931861277737682
+  },
+  "dense_det": {
+   "ms_per_frame": 6.164736032485962,
+   "ms_iqr": [
+    6.161608099937439,
+    6.172919869422913
+   ],
+   "frames": 114,
+   "speedup_vs_dense_graph": 1.0
+  },
+  "ALGM_csv_det": {
+   "ms_per_frame": 3.3650879859924316,
+   "ms_iqr": [
+    2.668832004070282,
+    3.8306880593299866
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.15394903890203362,
+   "overflow_share": 0.0,
+   "fallback_share": 0.0,
+   "graphs": 157,
+   "speedup_vs_dense_graph": 1.8319687503409687
+  },
+  "L_csv_det": {
+   "ms_per_frame": 4.77344012260437,
+   "ms_iqr": [
+    4.4794241189956665,
+    5.296136140823364
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.13081039256144947,
+   "overflow_share": 0.13157894736842105,
+   "fallback_share": 0.0,
+   "graphs": 256,
+   "speedup_vs_dense_graph": 1.2914660861237548
+  },
+  "L_csv16_det": {
+   "ms_per_frame": 4.778656005859375,
+   "ms_iqr": [
+    4.424768090248108,
+    5.291152000427246
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.13080530041600127,
+   "overflow_share": 0.15789473684210525,
+   "fallback_share": 0.0,
+   "graphs": 442,
+   "speedup_vs_dense_graph": 1.290056456235192
+  },
+  "L_csvo": {
+   "ms_per_frame": 3.434224009513855,
+   "ms_iqr": [
+    3.0358160734176636,
+    4.0288320779800415
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.13082213739193427,
+   "overflow_share": 0.13157894736842105,
+   "fallback_share": 0.0,
+   "graphs": 256,
+   "speedup_vs_dense_graph": 1.655365513877413
+  },
+  "L_csvo_det": {
+   "ms_per_frame": 4.635727882385254,
+   "ms_iqr": [
+    4.360456109046936,
+    5.201320171356201
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.13081039256144947,
+   "overflow_share": 0.13157894736842105,
+   "fallback_share": 0.0,
+   "graphs": 256,
+   "speedup_vs_dense_graph": 1.3298312991818615
+  },
+  "L_csvo_combo": {
+   "ms_per_frame": 3.3256959915161133,
+   "ms_iqr": [
+    2.8952560424804688,
+    3.8798880577087402
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.13079860630773718,
+   "overflow_share": 0.13157894736842105,
+   "fallback_share": 0.0,
+   "graphs": 256,
+   "speedup_vs_dense_graph": 1.7093853457385415
+  },
+  "L_csvo_combo_maxautotune": {
+   "ms_per_frame": 3.19267201423645,
+   "ms_iqr": [
+    2.8608240485191345,
+    3.886320114135742
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.13085191094328433,
+   "overflow_share": 0.13157894736842105,
+   "fallback_share": 0.0,
+   "graphs": 256,
+   "speedup_vs_dense_graph": 1.7806075810260251
+  },
+  "L_csvo_emu": {
+   "ms_per_frame": 3.474608063697815,
+   "ms_iqr": [
+    3.0770240426063538,
+    4.07148802280426
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.13034806072113408,
+   "overflow_share": 0.13157894736842105,
+   "fallback_share": 0.0,
+   "graphs": 256,
+   "speedup_vs_dense_graph": 1.636125827161341
+  },
+  "ALGM_csvo_emu": {
+   "ms_per_frame": 3.1859360933303833,
+   "ms_iqr": [
+    2.5029439330101013,
+    3.6573439240455627
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.15247098301765263,
+   "overflow_share": 0.0,
+   "fallback_share": 0.0,
+   "graphs": 153,
+   "speedup_vs_dense_graph": 1.7843722616345419
+  },
+  "L_csvo_det_emu": {
+   "ms_per_frame": 4.6661601066589355,
+   "ms_iqr": [
+    4.349608063697815,
+    5.215760111808777
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.13032769006597425,
+   "overflow_share": 0.13157894736842105,
+   "fallback_share": 0.0,
+   "graphs": 256,
+   "speedup_vs_dense_graph": 1.2183242457039376
+  },
+  "ALGM_csvo_det_emu": {
+   "ms_per_frame": 3.4229280948638916,
+   "ms_iqr": [
+    2.737783908843994,
+    3.8896079063415527
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.15249357270496444,
+   "overflow_share": 0.006578947368421052,
+   "fallback_share": 0.0,
+   "graphs": 153,
+   "speedup_vs_dense_graph": 1.6608283419126586
+  },
+  "L_csvo_thr": {
+   "ms_per_frame": 3.45032000541687,
+   "ms_iqr": [
+    3.054368019104004,
+    4.040063977241516
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.1304193185981618,
+   "overflow_share": 0.13157894736842105,
+   "fallback_share": 0.0,
+   "graphs": 256,
+   "speedup_vs_dense_graph": 1.6476431123356627
+  },
+  "ALGM_csvo_thr": {
+   "ms_per_frame": 3.190687894821167,
+   "ms_iqr": [
+    2.4873440265655518,
+    3.66239994764328
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.15234278748068752,
+   "overflow_share": 0.0,
+   "fallback_share": 0.0,
+   "graphs": 161,
+   "speedup_vs_dense_graph": 1.7817148463521788
+  },
+  "L_csvo_det_thr": {
+   "ms_per_frame": 4.657119989395142,
+   "ms_iqr": [
+    4.371800065040588,
+    5.203687906265259
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.13043899732219955,
+   "overflow_share": 0.15789473684210525,
+   "fallback_share": 0.0,
+   "graphs": 256,
+   "speedup_vs_dense_graph": 1.2206891824183805
+  },
+  "ALGM_csvo_det_thr": {
+   "ms_per_frame": 3.422239899635315,
+   "ms_iqr": [
+    2.7193440794944763,
+    3.894464075565338
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.1523447191970985,
+   "overflow_share": 0.0,
+   "fallback_share": 0.0,
+   "graphs": 153,
+   "speedup_vs_dense_graph": 1.6611623261375843
+  },
+  "L_csvo_fix": {
+   "ms_per_frame": 3.460543990135193,
+   "ms_iqr": [
+    3.072912037372589,
+    4.047639846801758
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.1304564094148707,
+   "overflow_share": 0.13157894736842105,
+   "fallback_share": 0.0,
+   "graphs": 256,
+   "speedup_vs_dense_graph": 1.6427752424141158
+  },
+  "ALGM_csvo_fix": {
+   "ms_per_frame": 3.184704065322876,
+   "ms_iqr": [
+    2.502776026725769,
+    3.662567973136902
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.15236533539185834,
+   "overflow_share": 0.0,
+   "fallback_share": 0.0,
+   "graphs": 161,
+   "speedup_vs_dense_graph": 1.7850625601856978
+  },
+  "L_csvo_det_fix": {
+   "ms_per_frame": 4.651072025299072,
+   "ms_iqr": [
+    4.369503974914551,
+    5.2128801345825195
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.13043899732219955,
+   "overflow_share": 0.15789473684210525,
+   "fallback_share": 0.0,
+   "graphs": 256,
+   "speedup_vs_dense_graph": 1.2222764905287622
+  },
+  "ALGM_csvo_det_fix": {
+   "ms_per_frame": 3.423072099685669,
+   "ms_iqr": [
+    2.724112033843994,
+    3.8897199630737305
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.1523447191970985,
+   "overflow_share": 0.0,
+   "fallback_share": 0.0,
+   "graphs": 153,
+   "speedup_vs_dense_graph": 1.6607584727184335
+  }
+ }
+}

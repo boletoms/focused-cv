@@ -1,0 +1,32 @@
+{
+ "davis": {
+  "ours": "ftome_l0.7_t0.01_floor64_dil1_noprop_cls64",
+  "expedite": "at5_t0.1",
+  "ailurus": "at3"
+ },
+ "ade_448": {
+  "ours": "ftome_l0.5_t0.01_floor64_dil2_noprop_cls64",
+  "expedite": "at5_t0.1",
+  "ailurus": "at3"
+ },
+ "ade_896": {
+  "ours": "ftome_l0.5_t0.01_floor256_dil1_noprop_cls64",
+  "expedite": "at5_t0.1",
+  "ailurus": "at3"
+ },
+ "davis_896": {
+  "ours": "ftome_l0.5_t0.01_floor512_dil1_noprop_cls64",
+  "expedite": "at5_t0.1",
+  "ailurus": "at3"
+ },
+ "davis_vitb": {
+  "ours": "ftome_l0.7_t0.01_floor128_dil2_noprop_cls64",
+  "expedite": "at5_t0.05",
+  "ailurus": "at3"
+ },
+ "davis_vitl": {
+  "ours": "ftome_l0.7_t0.01_floor128_dil1_noprop_cls64",
+  "expedite": "at9_t0.05",
+  "ailurus": "at4"
+ }
+}

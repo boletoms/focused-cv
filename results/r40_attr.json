@@ -1,0 +1,333 @@
+{
+ "setting": "titome_t0.98_l0.7_floor64_dil1_cls64~algm_t0.98@exp-pix-mot-rl-r0-e0.06-ring-srch-f0.05-o1",
+ "reference": "algm_t0.98",
+ "head": "r31c",
+ "loss_threshold": 0.1,
+ "v1val": {
+  "videos": 50,
+  "check_max_diff": {
+   "titome_t0.98_l0.7_floor64_dil1_cls64~algm_t0.98@exp-pix-mot-rl-r0-e0.06-ring-srch-f0.05-o1": 0.0,
+   "algm_t0.98": 0.0,
+   "dense": 0.0
+  },
+  "objects": 65,
+  "frames": 42865,
+  "minus_ref": [
+   6.196305371005082,
+   1.029660324991791,
+   11.395185287860288
+  ],
+  "minus_dense": [
+   3.8281321046723407,
+   -0.8783942771955792,
+   8.589469515476546
+  ],
+  "classes": {
+   "before": {
+    "frame_share": 0.47180683541350754,
+    "object_mean_share": 0.5197989514380909,
+    "objects_with_frames": 65,
+    "mean_frame_minus_ref": 1.5794202123067347,
+    "mean_frame_minus_dense": 2.321941483975643,
+    "contribution_ref": [
+     2.3058635481919216,
+     -1.2989086674212593,
+     6.57223648165643
+    ],
+    "contribution_dense": [
+     1.1128288630138996,
+     -1.1900703382406193,
+     3.919646152078121
+    ]
+   },
+   "fallback": {
+    "frame_share": 0.24474513005948909,
+    "object_mean_share": 0.21736533384693993,
+    "objects_with_frames": 43,
+    "mean_frame_minus_ref": -4.6385358820381,
+    "mean_frame_minus_dense": -4.28985215946019,
+    "contribution_ref": [
+     -1.0846735993711323,
+     -2.533102180697157,
+     -0.0606927844196823
+    ],
+    "contribution_dense": [
+     -1.069463703675693,
+     -2.163239858708177,
+     -0.1833519122115579
+    ]
+   },
+   "after": {
+    "frame_share": 0.2834480345270034,
+    "object_mean_share": 0.26283571471496914,
+    "objects_with_frames": 37,
+    "mean_frame_minus_ref": 23.490317921290973,
+    "mean_frame_minus_dense": 15.067346278032288,
+    "contribution_ref": [
+     4.975115422184293,
+     1.9333700244399106,
+     8.52687430147624
+    ],
+    "contribution_dense": [
+     3.784766945334135,
+     0.5809427807647952,
+     7.130171519749939
+    ]
+   }
+  },
+  "cells": {
+   "neither_lost": {
+    "frame_share": 0.5135891753178584,
+    "mean_frame_minus_ref": -0.9170752777101868,
+    "contribution_ref": [
+     -0.4433135334493766,
+     -1.8801565003646883,
+     0.6326213860010823
+    ]
+   },
+   "only_ref_lost": {
+    "frame_share": 0.11683191414907267,
+    "mean_frame_minus_ref": 85.3575855347412,
+    "contribution_ref": [
+     10.027515768999066,
+     5.679340489905093,
+     14.560100434274466
+    ]
+   },
+   "only_new_lost": {
+    "frame_share": 0.03825965239706054,
+    "mean_frame_minus_ref": -84.51740766025884,
+    "contribution_ref": [
+     -3.367212188780842,
+     -5.617586113417796,
+     -1.6189048628537173
+    ]
+   },
+   "both_lost": {
+    "frame_share": 0.3313192581360084,
+    "mean_frame_minus_ref": 0.0009751881809104354,
+    "contribution_ref": [
+     -0.020684675763766727,
+     -0.1384728299218934,
+     0.08102988982902849
+    ]
+   }
+  }
+ },
+ "v2new": {
+  "videos": 90,
+  "check_max_diff": {
+   "titome_t0.98_l0.7_floor64_dil1_cls64~algm_t0.98@exp-pix-mot-rl-r0-e0.06-ring-srch-f0.05-o1": 0.0,
+   "algm_t0.98": 0.0,
+   "dense": 0.0
+  },
+  "objects": 174,
+  "frames": 59728,
+  "minus_ref": [
+   1.5760670704328317,
+   -0.6975329061409616,
+   3.873873888985095
+  ],
+  "minus_dense": [
+   -1.027715221816215,
+   -3.271438547333618,
+   0.9718426467233793
+  ],
+  "classes": {
+   "before": {
+    "frame_share": 0.7286532279667828,
+    "object_mean_share": 0.8131592909445101,
+    "objects_with_frames": 174,
+    "mean_frame_minus_ref": 2.83453583768093,
+    "mean_frame_minus_dense": -1.2631538974724381,
+    "contribution_ref": [
+     2.4408514442933344,
+     0.5934452069665297,
+     4.339433038354739
+    ],
+    "contribution_dense": [
+     -0.3360572255656683,
+     -2.2295685603661335,
+     1.501747105467808
+    ]
+   },
+   "fallback": {
+    "frame_share": 0.16131462630592017,
+    "object_mean_share": 0.08879101469730101,
+    "objects_with_frames": 47,
+    "mean_frame_minus_ref": -7.700948897959094,
+    "mean_frame_minus_dense": -6.270952827246899,
+    "contribution_ref": [
+     -1.1525170022097084,
+     -2.4055556972044054,
+     -0.32716606094612655
+    ],
+    "contribution_dense": [
+     -0.7539200771511088,
+     -1.6194516368346294,
+     -0.08713630124003702
+    ]
+   },
+   "after": {
+    "frame_share": 0.11003214572729708,
+    "object_mean_share": 0.09804969435818889,
+    "objects_with_frames": 42,
+    "mean_frame_minus_ref": 1.6992797942761415,
+    "mean_frame_minus_dense": 0.32231137664744175,
+    "contribution_ref": [
+     0.2877326283492053,
+     -0.23803109311565968,
+     1.0105202474625719
+    ],
+    "contribution_dense": [
+     0.06226208090056201,
+     -0.2776829993169334,
+     0.491019569384331
+    ]
+   }
+  },
+  "cells": {
+   "neither_lost": {
+    "frame_share": 0.7303609697294401,
+    "mean_frame_minus_ref": 0.8594051998590061,
+    "contribution_ref": [
+     0.6579462739253996,
+     0.01922225179356302,
+     1.2062854901652522
+    ]
+   },
+   "only_ref_lost": {
+    "frame_share": 0.0360802303777123,
+    "mean_frame_minus_ref": 82.7114809411902,
+    "contribution_ref": [
+     3.4184551620635584,
+     1.860267279854597,
+     5.120863202647256
+    ]
+   },
+   "only_new_lost": {
+    "frame_share": 0.035209616930083044,
+    "mean_frame_minus_ref": -76.59792568008334,
+    "contribution_ref": [
+     -2.6405370350466892,
+     -4.1259173518106085,
+     -1.45389252688845
+    ]
+   },
+   "both_lost": {
+    "frame_share": 0.19834918296276452,
+    "mean_frame_minus_ref": 0.4797182080999134,
+    "contribution_ref": [
+     0.14020266949056273,
+     -0.0105375407256813,
+     0.41429248045014044
+    ]
+   }
+  }
+ },
+ "all": {
+  "objects": 239,
+  "frames": 102593,
+  "minus_ref": [
+   2.8326172358604307,
+   0.5460501821986291,
+   5.138636927155436
+  ],
+  "minus_dense": [
+   0.29291271216602766,
+   -1.522791675814364,
+   2.1603236855146926
+  ],
+  "classes": {
+   "before": {
+    "frame_share": 0.6213386878247054,
+    "object_mean_share": 0.7333750981917183,
+    "objects_with_frames": 239,
+    "mean_frame_minus_ref": 2.436332709473734,
+    "mean_frame_minus_dense": -0.12573184092830147,
+    "contribution_ref": [
+     2.4041392549770513,
+     0.6844072844443826,
+     4.200019147537865
+    ],
+    "contribution_dense": [
+     0.057991292248858434,
+     -1.4142479426148487,
+     1.5195407453299898
+    ]
+   },
+   "fallback": {
+    "frame_share": 0.19617322819295663,
+    "object_mean_share": 0.12375892576310239,
+    "objects_with_frames": 90,
+    "mean_frame_minus_ref": -6.104617041155598,
+    "mean_frame_minus_dense": -5.238272358909904,
+    "contribution_ref": [
+     -1.1340658675464974,
+     -2.041769111828241,
+     -0.43528819112122236
+    ],
+    "contribution_dense": [
+     -0.8397373814360376,
+     -1.5617113124196766,
+     -0.2560038352079678
+    ]
+   },
+   "after": {
+    "frame_share": 0.18248808398233798,
+    "object_mean_share": 0.14286597604517937,
+    "objects_with_frames": 79,
+    "mean_frame_minus_ref": 15.84099078900054,
+    "mean_frame_minus_dense": 9.891383807575007,
+    "contribution_ref": [
+     1.5625438484298775,
+     0.6470585580726669,
+     2.6365532235036633
+    ],
+    "contribution_dense": [
+     1.0746588013532072,
+     0.24160776825080063,
+     2.144595841307623
+    ]
+   }
+  },
+  "cells": {
+   "neither_lost": {
+    "frame_share": 0.6397902391001336,
+    "mean_frame_minus_ref": 0.2635732471230028,
+    "contribution_ref": [
+     0.358440468572427,
+     -0.24464239695447343,
+     0.8706060752308882
+    ]
+   },
+   "only_ref_lost": {
+    "frame_share": 0.06981957833380445,
+    "mean_frame_minus_ref": 84.5615007379937,
+    "contribution_ref": [
+     5.215898423364011,
+     3.5613299856338854,
+     7.066207873883119
+    ]
+   },
+   "only_new_lost": {
+    "frame_share": 0.036483970641271825,
+    "mean_frame_minus_ref": -80.06785633663897,
+    "contribution_ref": [
+     -2.8381683530078603,
+     -3.966335367386359,
+     -1.8323810286275983
+    ]
+   },
+   "both_lost": {
+    "frame_share": 0.2539062119247902,
+    "mean_frame_minus_ref": 0.2187059477870538,
+    "contribution_ref": [
+     0.09644669693185391,
+     -0.026127980693872264,
+     0.3028851532694959
+    ]
+   }
+  }
+ }
+}

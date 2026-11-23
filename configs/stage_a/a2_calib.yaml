@@ -1,0 +1,23 @@
+# Stage A, A2 on the calibration set (owner decision 2026-11-17). Grids widened from the brief: see DECISIONS.md.
+run_id: a2-calib
+seed: 0
+resolutions: [448, 896]
+batch: {448: 8, 896: 2}
+chunk: 64
+loader_workers: 4
+trees:
+  eps:   # per resolution; extra points fill each resolution's gap in attention cost
+    448: [0.01, 0.015, 0.02, 0.025, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.1, 0.2]
+    896: [0.01, 0.015, 0.02, 0.025, 0.03, 0.035, 0.04, 0.045, 0.05, 0.1, 0.2]
+  eps_side: [0.02, 0.025, 0.03, 0.04]   # where beta and s_min are swept
+  beta: 0.3
+  s_min: 32
+  beta_sweep: [0.2, 0.4]
+  s_sweep: [16, 64]
+windows: {448: [4, 7, 14], 896: [4, 7, 8, 14, 28]}
+groups: [2, 3, 4, 6, 8, 16, 32]
+kmeans: [2, 3, 4, 6, 8, 16, 32]
+kmeans_iters: 10
+seeds: [0, 1, 2]
+out: runs/stage_a/a2
+trees_dir: /work/stage_a/trees

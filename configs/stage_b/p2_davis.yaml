@@ -1,0 +1,16 @@
+# Stage B, P2: focus maps from the previous video frame, DAVIS 2017 val (owner direction). Frames resized to 448 x 784
+# (28 x 49 patches); DINO's label propagation protocol; J and F at that resolution.
+run_id: p2-davis
+seed: 0
+davis: /work/data/davis/DAVIS
+size: [448, 784]
+dtype: bfloat16
+n_last: 7
+topk: 5
+radius: 12
+temperature: 0.1
+boundary_th: 0.008
+out: runs/stage_b/p2
+methods: [tome_r32_from1, tome_r48_from1, tome_r64_from1, tome_r80_from1, tome_r96_from1, tome_r112_from1,
+          itome_l0.3_t0.01_floor128_dil1, itome_l0.3_t0.01_floor128_dil2, itome_l0.5_t0.01_floor128_dil2]
+gt_maps: [itome_l0.3_t0.01_floor128_dil2]

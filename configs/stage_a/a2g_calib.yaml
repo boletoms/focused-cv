@@ -1,0 +1,19 @@
+# Stage A, graph teacher and per-head teachers on the calibration set (owner decisions 2026-11-17, after review
+# stop 2). Comparison structures come from the a2-calib rows of the same images.
+run_id: a2g-calib
+seed: 0
+resolutions: [448, 896]
+stride: 4          # stratified order: every 4th image first
+chunk: 32
+teacher:
+  beta: 0.3
+  s_min: 32
+  max_memb: 3
+  eps:             # graph teacher, same grid as the nested tree
+    448: [0.01, 0.015, 0.02, 0.025, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.1, 0.2]
+    896: [0.01, 0.015, 0.02, 0.025, 0.03, 0.035, 0.04, 0.045, 0.05, 0.1, 0.2]
+  head_eps:        # per-head and per-block teachers (single heads split more readily)
+    448: [0.01, 0.015, 0.02, 0.03, 0.04, 0.05, 0.07, 0.1]
+    896: [0.005, 0.0075, 0.01, 0.015, 0.02, 0.025, 0.03, 0.04, 0.05]
+out: runs/stage_a/a2g
+trees_dir: /work/stage_a/trees_graph

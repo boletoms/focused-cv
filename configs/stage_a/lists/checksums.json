@@ -1,0 +1,25 @@
+{
+ "seed": 0,
+ "lists": {
+  "knn_bank": {
+   "n": 10000,
+   "sha256": "810d68a11820fcfd3c38933f6c48e8ed1bf11bdeecec639e46cc8bc6d8f981f7"
+  },
+  "in100_val": {
+   "n": 5000,
+   "sha256": "0300e22dd7a327e972319cca0780c0f2626caf59dc0e4de41fc43edefbf388e8"
+  },
+  "voc_train": {
+   "n": 1464,
+   "sha256": "216004b9b7bd37f6a787af790a884248b122cf193743bde9a13d25548f31aeb1"
+  },
+  "voc_val": {
+   "n": 1449,
+   "sha256": "8a7b02ccc805bade8786d6e798a779ae693f9b3a91c82ee7976430cb3cca499f"
+  },
+  "calibration": {
+   "n": 512,
+   "sha256": "ca1567d52c8e6ea00ef2934081f0e57af521609312017d2944df5ccd6224a0b4"
+  }
+ }
+}

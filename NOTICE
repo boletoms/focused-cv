@@ -1,0 +1,26 @@
+Focus maps for frozen ViTs in long-video object segmentation
+Copyright 2026 The authors (see CITATION.cff)
+
+This product is licensed under the Apache License, Version 2.0 (LICENSE), except as noted below.
+
+Portions derived from third-party code, ported from the authors' repositories at the recorded commits (the
+provenance of each function is in the docstring of src/stage_b/baselines.py):
+
+- ALGM (Norouzi et al., CVPR 2024), tue-mps/algm-segmenter @ 674eaa2: MIT License.
+- AiluRus (Li et al., NeurIPS 2023), caddyless/ailurus @ 7765be2: Apache License 2.0 (MMSegmentation).
+- Expedite (Liang et al., NeurIPS 2022), Expedit-LargeScale-Vision-Transformer/Expedit-Segmenter @ 812e24b:
+  Apache License 2.0 (MMSegmentation).
+- G2TM (2026), vbercy/g2tm, branch segm @ 963093e: Apache License 2.0.
+- PiToMe (Tran et al., NeurIPS 2024), hchautran/PiToMe @ 550b5de: Creative Commons Attribution-NonCommercial 4.0
+  International (CC BY-NC 4.0). The PiToMe-derived parts of src/stage_b/baselines.py (class PiToMe and the energy
+  computation in class Novelty, each marked "SPDX-License-Identifier: CC-BY-NC-4.0") are under CC BY-NC 4.0, not
+  Apache 2.0, and may not be used for commercial purposes. https://creativecommons.org/licenses/by-nc/4.0/
+
+Not included, obtained by scripts/fetch_third_party.sh or by the user, each under its own licence:
+
+- Cutie (Cheng et al., CVPR 2024), hkchengrex/Cutie @ ec5cdd4: MIT License.
+- DAVIS 2017 evaluation toolkit, davisvideochallenge/davis2017-evaluation @ ac7c43f: BSD 3-Clause License.
+- LVOS evaluation toolkit, LingyiHongfd/lvos-evaluation @ 25cb02d: no licence file in the repository; used unchanged
+  for scoring only.
+- DINOv3 weights (Meta, facebook/dinov3-*-pretrain-lvd1689m on Hugging Face): DINOv3 License.
+- Datasets (DAVIS 2017, MOSE, LVOS V1 and V2): their own terms of use.
