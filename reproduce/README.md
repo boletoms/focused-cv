@@ -45,8 +45,10 @@ IMAGE=ml-base:vos bash scripts/run.sh env CUDA_VISIBLE_DEVICES= python -m src.st
 ## ViT-B (three heads) and ViT-L
 
 As Table 1 with `VOS_VIT=...vitb16...`, heads `r41_b1` to `r41_b3`, `algm_t0.95` and the ViT-B setting
-(`r40_official vitb3`); ViT-L with `VOS_VIT=...vitl16...`, head `r34`, `algm_t0.95` and the ViT-L setting
-(`r40_official vitl`).
+(`r40_compare vitb3`, `r40_official vitb3`); ViT-L with `VOS_VIT=...vitl16...`, head `r34`, `algm_t0.95` and the ViT-L
+setting (`r40_compare vitl`, `r40_official vitl`). At ViT-L run the method with `VOS_GRAPH_OVERLAP=0` in `GV` and one
+process: the side-stream overlap has an unresolved race at ViT-L that can crash a run at the start of a video
+(Appendix B). The overlap only reorders work.
 
 ## Table 2: where the gain comes from
 
@@ -62,7 +64,8 @@ IMAGE=ml-base:vos bash scripts/run.sh env $R python -m src.stage_b.vos.r40_wallc
 IMAGE=ml-base:vos bash scripts/run.sh env $R R40_DET=1 python -m src.stage_b.vos.r40_wallclock time vits dense L_csvo ALGM_csvo
 ```
 
-`vitb` and `vitl` with the matching `VOS_VIT`. Time on an idle GPU.
+`vitb` and `vitl` with the matching `VOS_VIT`. Time on an idle GPU. The kernel breakdown against ALGM (Section 6): `python -m src.stage_b.vos.r40_wallclock parts vits L_csvo`
+(likewise `vitb`, `vitl`).
 
 ## Implementation equivalence
 

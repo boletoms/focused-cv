@@ -1,17 +1,25 @@
 cff-version: 1.2.0
 message: "If you use this code, please cite the preprint."
-title: "Expect, Check, Focus: Training-Free Focus Maps for Frozen Vision Transformers in Long-Video Object Segmentation"
+title: "Focus Only on What's Important: Training-Free Focus Maps for Frozen Vision Transformers in Long-Video Object Segmentation"
 type: software
 license: Apache-2.0
 repository-code: "https://github.com/boletoms/focused-cv"
 authors:
-  - family-names: "AUTHOR"
-    given-names: "TO FILL IN"
+  - family-names: "Karipineni"
+    given-names: "Harsha"
+    affiliation: "Independent Researcher"
+    email: "boletoms@gmail.com"
+  - family-names: "Chintha"
+    given-names: "Rajesh"
+    affiliation: "Independent Researcher"
+    email: "chintharr@gmail.com"
 preferred-citation:
   type: article
-  title: "Expect, Check, Focus: Training-Free Focus Maps for Frozen Vision Transformers in Long-Video Object Segmentation"
+  title: "Focus Only on What's Important: Training-Free Focus Maps for Frozen Vision Transformers in Long-Video Object Segmentation"
   authors:
-    - family-names: "AUTHOR"
-      given-names: "TO FILL IN"
+    - family-names: "Karipineni"
+      given-names: "Harsha"
+    - family-names: "Chintha"
+      given-names: "Rajesh"
   journal: "arXiv preprint"
   year: 2026

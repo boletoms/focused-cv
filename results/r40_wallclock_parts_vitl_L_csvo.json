@@ -1,0 +1,53 @@
+{
+ "backbone": "vitl",
+ "variant": "L_csvo",
+ "frames": 60,
+ "method": {
+  "kernels_per_frame": 1505.5833333333333,
+  "gpu_ms_per_frame": 11.028341983333686,
+  "by_kind_ms": {
+   "matmul": 5.8791,
+   "cast": 2.8617,
+   "attention": 1.1757,
+   "other": 0.7944,
+   "gather_scatter_sort_index": 0.3174
+  },
+  "by_stage_kernel_ms": {
+   "states_and_map": 0.4379,
+   "size_classes": 0.1818,
+   "expectation": 0.4225,
+   "encoder": 25.851
+  },
+  "by_stage_gpu_span_ms": {
+   "states_and_map": 0.4379,
+   "size_classes": 0.1818,
+   "expectation": 0.4225,
+   "encoder": 25.851
+  },
+  "fallback_share": 0.0
+ },
+ "algm": {
+  "kernels_per_frame": 892.3833333333333,
+  "gpu_ms_per_frame": 9.998083866666763,
+  "by_kind_ms": {
+   "matmul": 5.9256,
+   "cast": 2.1396,
+   "attention": 1.3085,
+   "other": 0.5913,
+   "gather_scatter_sort_index": 0.033
+  },
+  "by_stage_kernel_ms": {
+   "encoder": 16.0272
+  },
+  "by_stage_gpu_span_ms": {
+   "encoder": 16.0272
+  }
+ },
+ "method_minus_algm_by_kind_ms": {
+  "matmul": -0.0465,
+  "attention": -0.1328,
+  "other": 0.2031,
+  "cast": 0.7221,
+  "gather_scatter_sort_index": 0.2844
+ }
+}

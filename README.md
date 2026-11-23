@@ -1,7 +1,6 @@
 # Focus maps for frozen ViTs in long-video object segmentation
 
-Code for the preprint *Expect, Check, Focus: Training-Free Focus Maps for Frozen Vision Transformers in Long-Video
-Object Segmentation*. A frozen DINOv3 ViT replaces the stride-16 pixel encoder of the Cutie video object segmenter.
+Code for the preprint *Focus Only on What's Important: Training-Free Focus Maps for Frozen Vision Transformers in Long-Video Object Segmentation* A frozen DINOv3 ViT replaces the stride-16 pixel encoder of the Cutie video object segmenter.
 Before the encoder runs on a frame, a **focus map** decides how much compute each patch gets:
 
 - **Expectation (high tier, full resolution).** Each tracked object is expected at its last mask moved by its own

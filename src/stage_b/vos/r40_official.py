@@ -53,6 +53,8 @@ class Rows:
 
     def __init__(self, run, k, seqs=None):
         by = load(V / run)
+        for r in by.values():                                           # DAVIS rows carry no ids: objects 1..n, as the
+            r.setdefault("objects", list(range(1, len(r["J"]) + 1)))    # official files number them
         self.seqs = sorted(s for (kk, s) in by if kk == k and (seqs is None or s in seqs))
         self.keys = [(s, o) for s in self.seqs for o in by[(k, s)]["objects"]]
         self.ours = np.concatenate([50 * (np.array(by[(k, s)]["J"]) + np.array(by[(k, s)]["F"])) for s in self.seqs])

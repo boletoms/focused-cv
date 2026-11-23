@@ -68,8 +68,9 @@ def flops(scorer="ours"):
     a.set_xlim(0.3, 1.08)
     a.set_ylim(min(v[1] for v in pts.values()) - 0.5, max(v[1] for v in pts.values()) + 0.7)
     sh = json.loads((Q / "r40_final_fix_davis_all.json").read_text())["vits"]
-    b.axhline(sh["dense"], color=GRID, lw=1, zorder=1)
-    b.annotate("dense", (1.0, sh["dense"]), textcoords="offset points", xytext=(-22, 3), color=MUTED)
+    b.axhline(sh["dense"], color=MUTED, lw=0.8, ls="--", zorder=1)
+    b.annotate(f"dense ({sh['dense']:.2f})", (0.01, sh["dense"]), xycoords=("axes fraction", "data"),
+               textcoords="offset points", xytext=(0, 3), color=MUTED)
     seen = set()
     for k, v in list(sh["settings"].items()) + [("titome", sh["redesign"])]:
         fam, col = _family(k)

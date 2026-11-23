@@ -14,7 +14,9 @@ at lower head-averaged FLOPs, superiority if above 0.
 `tome3_gate`, `tome3`: plan section M (the ToMe arm's third version: gate, validation).
 `final`, `final_short`: plan section L4 (the validation, short clips and ViT-B long videos on the final implementation).
 `vitl`: plan section N (R34, ViT-L: short clips and long videos, one head).
-Usage: python -m src.stage_b.vos.r40_compare <flops_sign [runs]|davis_final [run] [tag]|gate [run dir] [out json]|val|val_detail|full|tome|tome_detail|d2val|tome_gate|tome2|tome2_detail|davis_all|vitb|vitl|davis>"""
+`vitb3`: plan section P (ViT-B heads r41_b1 to b3, all 140 LVOS V2 valid videos; section C's rules against ALGM 0.95
+on our scorer, the official metric beside it; computed by `r40_official._long`, plus loop statistics).
+Usage: python -m src.stage_b.vos.r40_compare <flops_sign [runs]|davis_final [run] [tag]|gate [run dir] [out json]|val|val_detail|full|tome|tome_detail|d2val|tome_gate|tome2|tome2_detail|davis_all|vitb|vitb3|vitl|davis>"""
 import json
 import sys
 from pathlib import Path
@@ -358,13 +360,14 @@ def vitb():
 
 
 def vitl():
-    """Plan section N (reported, one head, R34 head): ViT-L. Short clips: every R34 setting (`eval_r34_cutie`) and the
-    redesign's row on the final implementation (`eval_r40ol_davis`) against dense, the redesign against each setting
-    (paired over objects). Long videos (LVOS V1 val and the 90 new V2 valid): the redesign (`eval_r40ol_*`) against the
-    picked plain ALGM (`r34_algm.txt`) and dense (`eval_r34_*`), per split and pooled, per object (`r40_vitl.json`)."""
+    """Plan section N (reported, one head, R34 head): ViT-L, on the rows of section O's amendment (all 140 LVOS V2 valid
+    videos in one run per method, masks saved). Short clips: every R34 setting (`eval_oml_davis_all`) and the redesign's
+    row on the final implementation (`eval_oml_davis_r40`) against dense, the redesign against each setting (paired over
+    objects). Long videos: the redesign (`eval_oml_r40`) against the picked plain ALGM (`r34_algm.txt`) and dense
+    (`eval_oml_base`), per split (LVOS V1 val, the 90 new) and pooled, per object (`r40_vitl.json`)."""
     ref, new = (Q / "r34_algm.txt").read_text().strip(), SL_FINAL
     out = {"setting": new, "reference": ref, "head": "r34"}
-    a, b = load(V / "eval_r40ol_davis"), load(V / "eval_r34_cutie")
+    a, b = load(V / "eval_oml_davis_r40"), load(V / "eval_oml_davis_all")
     seqs = sorted(s for (k, s) in b if k == "dense")
     assert len(seqs) == 30 and all((new, s) in a for s in seqs), "davis incomplete"
     assert all(len(a[(new, s)]["J"]) == len(b[("dense", s)]["J"]) for s in seqs), "objects"
@@ -375,11 +378,12 @@ def vitl():
                     "settings": {k: {"jf": float(jf(k).mean()), "flops": fl(k), "minus_dense": ci(jf(k) - jf("dense")),
                                      "redesign_minus": ci(ja(new) - jf(k))} for k in sorted({k for (k, s) in b} - {"dense"})}}
     new90 = set((Q / "v2valid_new.txt").read_text().split())
+    a, b = load(V / "eval_oml_r40"), load(V / "eval_oml_base")
+    allseq = sorted(s for (k, s) in a if k == new)
+    assert len(allseq) == 140, len(allseq)
     parts = {}
-    for tag, want in (("v1val", None), ("v2new", new90)):
-        a, b = load(V / f"eval_r40ol_{tag}"), load(V / f"eval_r34_{tag}")
-        seqs = sorted(s for (k, s) in a if k == new and (want is None or s in want))
-        assert len(seqs) == (50 if want is None else 90), (tag, len(seqs))
+    for tag, seqs in (("v1val", [s for s in allseq if s not in new90]), ("v2new", [s for s in allseq if s in new90])):
+        assert len(seqs) == (50 if tag == "v1val" else 90), (tag, len(seqs))
         for k in (ref, "dense"):
             _same_objects(a, new, b, k, seqs)
         ja, fa, _ = tools(a, seqs)
@@ -399,6 +403,23 @@ def vitl():
                     "fallback_frame_share": sum(p["stats"]["fallback_frames"] for p in ps) / fr}
     print(json.dumps(out, indent=1))
     (Q / "r40_vitl.json").write_text(json.dumps(out, indent=1) + "\n")
+    return out
+
+def vitb3():
+    """Plan section P: the three-head protocol at ViT-B (`r40_vitb3.json`). The comparison is `r40_official.vitb3`
+    (head-averaged per-object differences, both scorers, section C's rules on ours); added here: fallback and
+    global-motion frame shares and the tier shares over the three heads."""
+    from .r40_official import vitb3 as off                              # local: r40_official imports this module
+    out = off()
+    st = [_exp_stats(b, SB_FINAL, sorted(s for (k, s) in b if k == SB_FINAL))
+          for b in (load(V / f"eval_omb_b{h}_r40") for h in (1, 2, 3))]
+    fr = sum(x["frames"] for x in st)
+    out["fallback_frame_share"] = sum(x["fallback_frames"] for x in st) / fr
+    out["global_frame_share"] = sum(x["exp_global"] for x in st) / fr
+    out["mid_share"] = sum(x["exp_mid_share"] * x["frames"] for x in st) / fr
+    out["high_share"] = sum(x["exp_high_share"] * x["frames"] for x in st) / fr
+    print(json.dumps(out, indent=1))
+    (Q / "r40_vitb3.json").write_text(json.dumps(out, indent=1) + "\n")
     return out
 
 
@@ -577,4 +598,4 @@ def flops_sign(*runs):
 
 
 if __name__ == "__main__":
-    {"flops_sign": flops_sign, "davis_final": davis_final, "final": final, "final_short": final_short, "tome3_gate": tome3_gate, "tome3": tome3, "gate": gate, "val": val, "val_detail": val_detail, "tome_detail": tome_detail, "d2val": d2val, "tome_gate": tome_gate, "tome2": tome2, "tome2_detail": tome2_detail, "davis_all": davis_all, "vitb": vitb, "vitl": vitl, "full": full, "tome": tome, "davis": davis}[sys.argv[1]](*sys.argv[2:])
+    {"flops_sign": flops_sign, "davis_final": davis_final, "final": final, "final_short": final_short, "tome3_gate": tome3_gate, "tome3": tome3, "gate": gate, "val": val, "val_detail": val_detail, "tome_detail": tome_detail, "d2val": d2val, "tome_gate": tome_gate, "tome2": tome2, "tome2_detail": tome2_detail, "davis_all": davis_all, "vitb": vitb, "vitb3": vitb3, "vitl": vitl, "full": full, "tome": tome, "davis": davis}[sys.argv[1]](*sys.argv[2:])

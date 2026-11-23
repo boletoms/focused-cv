@@ -10,6 +10,10 @@ place of the masked kernel). Counted FLOPs from the timed frames' states after t
 merged into `r40_wallclock_<bb>.json` by variant.
 `profile <vits|vitb> [variant]`: kernels per frame and their summed GPU time (eager, the same kernels as the graphs),
 and the graph run's wall time split at the decision read and the expectation step. Writes `r40_wallclock_prof_<bb>_<variant>.json`.
+`parts <vits|vitb|vitl> [variant]`: where the method's GPU time goes against plain ALGM on the same implementation
+(eager runs of the same compiled kernels, profiled): per stage (object states and map motion, size classes, expectation
+step, encoder) and per kernel type (attention, matrix products, casts, gather / scatter / sort / index, other), for
+the method and for ALGM's encoder alone. Writes `r40_wallclock_parts_<bb>_<variant>.json`.
 Usage (ml-base:vos; ViT-B with VOS_VIT=facebook/dinov3-vitb16-pretrain-lvd1689m, ViT-L (plan section N, after
 `r34_algm.txt`) with VOS_VIT=facebook/dinov3-vitl16-pretrain-lvd1689m): python -m src.stage_b.vos.r40_wallclock <cmd> <bb> ..."""
 import json
@@ -313,6 +317,96 @@ def profile(bb, variant="L", n=30):
     (Q / f"r40_wallclock_prof_{bb}_{variant}.json").write_text(json.dumps(out, indent=1) + "\n")
 
 
+KINDS = (("attention", ("flash", "attn_fwd", "fmha")), ("matmul", ("gemm", "nvjet", "mma", "xmma", "cutlass")),
+         ("cast", ("to_copy", "convert")), ("gather_scatter_sort_index", ("scatter", "gather", "index", "sort", "topk",
+                                                                           "radix", "cumsum", "argsort", "unique")))
+
+
+def _kind(name):
+    n = name.lower()
+    for k, keys in KINDS:
+        if any(x in n for x in keys):
+            return k
+    return "other"
+
+
+@torch.no_grad()
+def parts(bb, variant="L_csvo", n=60):
+    """See the module docstring. Read-only for the method: stages are labelled by wrapping the runner's functions in
+    this process (FrameRunner itself is unchanged)."""
+    from torch.profiler import ProfilerActivity, profile as tprof, record_function
+    import src.stage_b.frame_runner as frm
+    from src.stage_b.model import State
+    from src.stage_b.tiered_graph import P as NP
+    from .r40_timing import sequences
+    model, blocks = _setup(bb)
+    frames = [fr for seq in sequences() for fr in seq][:n]
+
+    def label(name, f):
+        def g(*a, **k):
+            with record_function(name):
+                return f(*a, **k)
+        return g
+
+    def summarise(prof, stages):
+        cuda = [e for e in prof.events() if e.device_type.name == "CUDA"]
+        ev = [e for e in cuda if e.name not in stages]                      # kernels (not the labels' GPU spans)
+        spans = {s: sum(e.time_range.end - e.time_range.start for e in cuda if e.name == s) for s in stages}
+        kinds = {}
+        for e in ev:
+            kinds[_kind(e.name)] = kinds.get(_kind(e.name), 0) + e.device_time_total
+        out = {"kernels_per_frame": len(ev) / n, "gpu_ms_per_frame": sum(e.device_time_total for e in ev) / 1000 / n,
+               "by_kind_ms": {k: round(v / 1000 / n, 4) for k, v in sorted(kinds.items(), key=lambda kv: -kv[1])}}
+        ka = {e.key: e for e in prof.key_averages()}                        # kernels launched inside each label;
+        out["by_stage_kernel_ms"] = {s: round(ka[s].device_time_total / 1000 / n, 4) if s in ka else 0.0 for s in stages}
+        out["by_stage_gpu_span_ms"] = {s: round(v / 1000 / n, 4) for s, v in spans.items()}   # its span on the GPU
+        return out
+
+    res = {"backbone": bb, "variant": variant, "frames": n}
+    fr_ = _frame_runner(model, bb, graphs=False, **VARIANTS[variant])           # the method, eager, same kernels
+    fr_.f_pre, fr_.f_step = label("states_and_map", fr_.f_pre), label("expectation", fr_.f_step)
+    pm = frm.promote_map
+    frm.promote_map = label("size_classes", pm)
+    fr_.runner.encode = label("encoder", fr_.runner.encode)
+    try:
+        for _ in range(2):
+            fr_.reset()
+            for f in frames:
+                fr_.run(f[0], f[1], f[2], f[3])
+        fr_.reset()
+        with tprof(activities=[ProfilerActivity.CUDA, ProfilerActivity.CPU]) as prof:
+            for f in frames:
+                fr_.run(f[0], f[1], f[2], f[3])
+            torch.cuda.synchronize()
+        res["method"] = summarise(prof, ["states_and_map", "size_classes", "expectation", "encoder"])
+        res["method"]["fallback_share"] = fr_.stats["fallback"] / max(1, fr_.stats["frames"])
+    finally:
+        frm.promote_map = pm
+    fa = _frame_runner(model, bb, graphs=False, **VARIANTS[variant])           # plain ALGM: the fallback encoder alone
+    last = {}
+
+    def algm(f):
+        st = State(size=None, coords=None, src=None, carried=None, pairs=[], tokens=[], tiles=[], interest=None)
+        fa.last[True] = last.get("n")
+        with record_function("encoder"):
+            _, st = fa.runner.encode(f[0], fa.spec[True], fa.zeros, [], st, fa.caps(True))
+        last["n"] = [fa.N0] + [t - NP for _, t in st.tokens]
+    for _ in range(2):
+        last.clear()
+        for f in frames:
+            algm(f)
+    last.clear()
+    with tprof(activities=[ProfilerActivity.CUDA, ProfilerActivity.CPU]) as prof:
+        for f in frames:
+            algm(f)
+        torch.cuda.synchronize()
+    res["algm"] = summarise(prof, ["encoder"])
+    res["method_minus_algm_by_kind_ms"] = {k: round(res["method"]["by_kind_ms"].get(k, 0) - res["algm"]["by_kind_ms"].get(k, 0), 4)
+                                           for k in set(res["method"]["by_kind_ms"]) | set(res["algm"]["by_kind_ms"])}
+    print(json.dumps(res, indent=1), flush=True)
+    (Q / f"r40_wallclock_parts_{bb}_{variant}.json").write_text(json.dumps(res, indent=1) + "\n")
+
+
 if __name__ == "__main__":
     a = sys.argv[1:]
     if a[0] == "check":
@@ -323,5 +417,7 @@ if __name__ == "__main__":
         diag(a[1], *(a[2:3] or ["L"]))
     elif a[0] == "profile":
         profile(a[1], *(a[2:3] or ["L"]))
+    elif a[0] == "parts":
+        parts(a[1], *(a[2:3] or ["L_csvo"]))
     elif a[0] == "tokens":
         tokens(a[1], a[2:] or ["L", "L_varlen", "L_cs", "L_csv", "L_csvo", "ALGM_csvo"])
