@@ -188,7 +188,8 @@ def time_it(bb, variants):
         r = run_timed(seqs, step, reset)
         if saved:
             k = r["frames"]
-            fl = [image_flops(st, ops, 0, N0)["flops"] / dn for st, ops in saved[-k:]]
+            fl = [image_flops(st, ops, 0, N0, width=model.bb.config.hidden_size)["flops"] / dn   # width: the backbone's (audit,
+                  for st, ops in saved[-k:]]                                               # 2026-11-23; was ViT-S's)
             r["counted_flops_ratio"] = float(np.mean(fl))
         if v.startswith(("L", "ALGM")):
             r["overflow_share"] = fr_.stats["overflow"] / max(1, fr_.stats["frames"])
@@ -198,7 +199,9 @@ def time_it(bb, variants):
         res["rows"][tag] = r
         print(bb, tag, json.dumps(r), flush=True)
         for name, row in res["rows"].items():                    # against dense with graphs under the same kernels
-            d = res["rows"].get("dense_det" if name.endswith("_det") else "dense", {}).get("ms_per_frame")
+            sfx = max((k[len("dense"):] for k in res["rows"] if k.startswith("dense") and name.endswith(k[len("dense"):])),
+                      key=len, default=None)                     # dense under the same kernels and tag (audit
+            d = res["rows"].get("dense" + sfx, {}).get("ms_per_frame") if sfx is not None else None   # 2026-11-23)
             if d:
                 row["speedup_vs_dense_graph"] = d / row["ms_per_frame"]
         path.write_text(json.dumps(res, indent=1) + "\n")       # after every variant (a later crash keeps these)

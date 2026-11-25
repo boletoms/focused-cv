@@ -17,7 +17,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-Q = Path("reports/stage_b/queue")
+Q = Path("reports/stage_b/queue") if Path("reports/stage_b/queue/r40_final_fix_val_detail.json").exists() else Path("results")
 OUT = Path("docs/paper/arxiv/figures")
 INK, MUTED, GRID = "#1f2328", "#59636e", "#d0d7de"
 OURS_C, ALGM_C, OTHER_C, PROT_C, CLOSED_C = "#c2410c", "#1d4ed8", "#6b7280", "#0f766e", "#7c3aed"
@@ -64,7 +64,7 @@ def flops(scorer="ours"):
                (pts["Ours"][0], pts["Ours"][1]), textcoords="offset points", xytext=(8, -26), color=OURS_C, fontsize=7)
     a.set_xlabel("Encoder FLOPs (share of dense)")
     a.set_ylabel("J&F" + (" (official)" if scorer == "official" else ""))
-    a.set_title("(a) Held-out long videos (LVOS V2 valid, 3 heads)", fontsize=8, color=INK)
+    a.set_title("(a) LVOS V2 valid (3 ViT-S heads)", fontsize=8, color=INK)
     a.set_xlim(0.3, 1.08)
     a.set_ylim(min(v[1] for v in pts.values()) - 0.5, max(v[1] for v in pts.values()) + 0.7)
     sh = json.loads((Q / "r40_final_fix_davis_all.json").read_text())["vits"]
@@ -72,7 +72,7 @@ def flops(scorer="ours"):
     b.annotate(f"dense ({sh['dense']:.2f})", (0.01, sh["dense"]), xycoords=("axes fraction", "data"),
                textcoords="offset points", xytext=(0, 3), color=MUTED)
     seen = set()
-    for k, v in list(sh["settings"].items()) + [("titome", sh["redesign"])]:
+    for k, v in list(sh["settings"].items()) + [("titome", sh["method"])]:
         fam, col = _family(k)
         b.scatter([v["flops"]], [v["jf"]], s=110 if fam == "Ours" else 22, color=col, marker="*" if fam == "Ours" else "o",
                   edgecolor="white", linewidth=0.6, zorder=3, label=None if fam in seen else fam)

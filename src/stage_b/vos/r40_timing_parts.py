@@ -1,11 +1,11 @@
-"""R40 plan section J3b (reported, no rule): where the redesign's wall clock goes, ViT-S and ViT-B, after J3 found it
+"""R40 plan section J3b (reported, no rule): where the expectation focus map's wall clock goes, ViT-S and ViT-B, after J3 found it
 slower than dense at ViT-S (`queue/r40_timing.json`). Same frames, maps and protocol as J3 (`r40_timing.py`). Per frame
-of the redesign, CUDA events split the step into (a) the run-time state update outside the encoder (map motion and object
+of the expectation focus map, CUDA events split the step into (a) the run-time state update outside the encoder (map motion and object
 states), (b) the encoder call, and inside it (c) the expectation step (`ExpectMap._step`: expectation map, surprise check,
 tiers); the host clock also gives the time until the encoder call returns, before the GPU is waited on (host time close
 to the total means the step is bound by Python and kernel launches, not by GPU work). Beside it, as J3: dense (eager and
 graph), today's design (eager and graph) and the backbone's ALGM fallback (eager), and the per-frame GPU kernels of
-dense and the redesign, both eager, from the PyTorch profiler.
+dense and the expectation focus map, both eager, from the PyTorch profiler.
 Usage (ml-base:vos, idle GPU): python -m src.stage_b.vos.r40_timing_parts <vits|vitb> [out json]
        python -m src.stage_b.vos.r40_timing_parts check   (CPU, fp32, a few frames: runs the code path, no timing claim)"""
 import json
@@ -31,8 +31,8 @@ POINT = {"vits": (S_FINAL, "ftome_l0.7_t0.01_floor64_dil1_noprop_cls64"),
          "vitb": (SB_FINAL, "ftome_l0.7_t0.01_floor128_dil2_noprop_cls64")}
 
 
-class Redesign:
-    """The redesign's closed-loop step as in `r40_timing.main` (state reset per sequence), with optional CUDA-event
+class FocusMapStep:
+    """The expectation focus map's closed-loop step as in `r40_timing.main` (state reset per sequence), with optional CUDA-event
     marks around its parts."""
 
     def __init__(self, model, name, blocks, dt):
@@ -131,13 +131,13 @@ def main(bb, out_json=None):
     seqs = sequences(dev, 5, 2) if check else sequences()
     name, ours = POINT[bb]
     fb_name = name.split("~")[1].split("@")[0]
-    rd = Redesign(model, name, blocks, dt)
+    rd = FocusMapStep(model, name, blocks, dt)
     if check:
         for seq in seqs:
             rd.reset()
             for fr in seq:
                 rd.step(fr)
-        print("check passed: the redesign's step ran on the CPU; fallback share", float(np.mean(rd.lost)))
+        print("check passed: the expectation focus map's step ran on the CPU; fallback share", float(np.mean(rd.lost)))
         return
     res = {"backbone": bb, "setting": name, "rows": []}
 
@@ -163,7 +163,7 @@ def main(bb, out_json=None):
     print(bb, "parts", {k: round(v, 2) for k, v in res["parts"].items()}, flush=True)
     rd.reset()
     frs = seqs[0][:10]
-    res["launches_per_frame"] = {"dense eager": launches(dense, frs), "redesign eager": launches(rd.step, frs)}
+    res["launches_per_frame"] = {"dense eager": launches(dense, frs), "method eager": launches(rd.step, frs)}
     print(bb, "launches", res["launches_per_frame"], flush=True)
     d = {r["mode"]: r["ms_per_frame"] for r in res["rows"] if r["setting"] == "dense"}
     for r in res["rows"]:

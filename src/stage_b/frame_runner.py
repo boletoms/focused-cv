@@ -1,4 +1,4 @@
-"""R40 plan section L (implementation only, method unchanged): one frame of the redesign as the evaluator and the timing
+"""R40 plan section L (implementation only, method unchanged): one frame of the expectation focus map as the evaluator and the timing
 protocol run it (map motion, object states, the main-or-fallback decision, the map's margin and size classes, the
 expectation step, the encoder), with two host reads per frame: the decision (with the high count the size classes
 need) and the encoder's per-block token counts at the end. The encoder's capacities come from the previous frame's
@@ -28,7 +28,7 @@ def pre_step(dobj, idx1, idx2, ids, base, pad, dilate, grid, theta):
     else:
         objs, all_lost = {}, torch.zeros((), dtype=torch.bool, device=base.device)
     mp = base
-    if idx1 is not None and idx2 is not None:
+    if idx1 is not None and idx2 is not None and dobj.motion:          # the eager path's `motion` switch (audit)
         mp = mp | moved_union(idx1, idx2, dobj.idt)
     imap = coverage(F.pad(mp.float(), pad))
     dm = dilate_map(imap, dilate, grid)

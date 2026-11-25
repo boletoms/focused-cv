@@ -1,0 +1,58 @@
+{
+ "setting": "dense@key20",
+ "videos": [
+  "IezdEfR0",
+  "PdatOPeT",
+  "Vh9NwLSn",
+  "afoR2rH6",
+  "f4DjwV55",
+  "iWjeKM6a",
+  "k9cLguJf",
+  "mSjSh9tj",
+  "uXO4RUO3",
+  "v3uNUctx",
+  "vr4ZIAbp",
+  "wM4lbQ4I"
+ ],
+ "warmup_video": "4obdZBCV",
+ "fallback_share": 0.0,
+ "encoder_ms": {
+  "all": {
+   "median": 5.3502562046051025,
+   "mean": 5.322666938938635,
+   "p90": 5.645648002624512,
+   "p99": 6.182307291030889,
+   "frames": 6516,
+   "mean_after_30": 5.317988124817048
+  },
+  "main": {
+   "median": 5.3502562046051025,
+   "mean": 5.322666938938635,
+   "p90": 5.645648002624512,
+   "p99": 6.182307291030889,
+   "frames": 6516,
+   "mean_after_30": 5.317988124817048
+  },
+  "fallback": null
+ },
+ "step_ms": {
+  "all": {
+   "median": 14.757232189178467,
+   "mean": 15.573865935142381,
+   "p90": 18.003151893615723,
+   "p99": 31.33628578186036,
+   "frames": 6516,
+   "mean_after_30": 15.632366631385798
+  },
+  "main": {
+   "median": 14.757232189178467,
+   "mean": 15.573865935142381,
+   "p90": 18.003151893615723,
+   "p99": 31.33628578186036,
+   "frames": 6516,
+   "mean_after_30": 15.632366631385798
+  },
+  "fallback": null
+ },
+ "encoder_share_of_step": 0.3417691510319254
+}

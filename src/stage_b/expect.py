@@ -1,4 +1,4 @@
-"""R40 redesign (owner 2026-11-21): interest from an expectation of where objects and background will be, and surprise
+"""R40 expectation focus map (owner 2026-11-21): interest from an expectation of where objects and background will be, and surprise
 as a deviation from it, decided on the current frame before the first merge.
 
 Owner's definitions and rules (`DECISIONS.md` 2026-11-21): we expect the next frame from the objects, the background
@@ -65,13 +65,19 @@ class ExpectConfig:
     sigma: float = 0.0           # pix: variance floor of the per-patch normalisation in the mismatch (R40 B4)
     tol: int = 0                 # pix: local tolerance of the mismatch, offsets of 4 pixels (R40 B4)
     mbase: bool = False          # R40 M: motion at the block-matching radius -> the frame runs the baseline (`alt`)
+    fired_high: bool = False     # R40 plan T: every fired patch is high interest, not only those in an object's zone (`-fh`)
+    esc: int = 0                 # R40 plan T: a patch outside the zone that fired on this and the n - 1 frames before it
+                                 # (camera-compensated) is high interest (`-escN`); 0: off
+    hold: int = 0                # R40 plan T: a fired patch (grown by one) keeps its tier for n frames after it stopped
+                                 # firing (`-holdN`); 0: off
 
     @property
     def name(self):
         s = f"exp-{self.feat}" + ("-mot" if self.motion else "") + ("-rl" if self.reloc else "") + f"-r{self.radius}" + \
             f"-{self.score}{self.thr:g}" + ("-ring" if self.ring else "") + ("-srch" if self.search else "") + \
             (f"-pt{self.proto:g}" if self.proto else "") + (f"-f{self.sigma:g}" if self.sigma else "") + \
-            (f"-o{self.tol}" if self.tol else "") + ("-mb" if self.mbase else "")
+            (f"-o{self.tol}" if self.tol else "") + ("-mb" if self.mbase else "") + ("-fh" if self.fired_high else "") + \
+            (f"-esc{self.esc}" if self.esc else "") + (f"-hold{self.hold}" if self.hold else "")
         return s
 
 
@@ -81,7 +87,13 @@ def config_from_name(name):
     assert t[0] == "exp", name
     c = ExpectConfig(feat=t[1], motion="mot" in t, reloc="rl" in t, ring="ring" in t, search="srch" in t, mbase="mb" in t)
     for x in t[2:]:
-        if x[0] == "r" and x[1:].isdigit():
+        if x == "fh":
+            c.fired_high = True
+        elif x.startswith("esc") and x[3:].isdigit():
+            c.esc = int(x[3:])
+        elif x.startswith("hold") and x[4:].isdigit():
+            c.hold = int(x[4:])
+        elif x[0] == "r" and x[1:].isdigit():
             c.radius = int(x[1:])
         elif x[0] in "ez" and x not in ("exp",):
             try:
@@ -108,6 +120,8 @@ class ExpectState:
     protos: dict = field(default_factory=dict)   # object id -> (D,) prototype
     objects: list = field(default_factory=list)  # evaluator, per frame: dicts (see ExpectMap)
     last: dict = field(default_factory=dict)     # last frame's counts (diagnostics)
+    streak: torch.Tensor = None                  # (gh, gw) consecutive frames a patch fired (camera-compensated)
+    hold_left: torch.Tensor = None               # (gh, gw) frames a fired patch is still held
 
 
 def _disps(r, device):
@@ -238,7 +252,8 @@ class ExpectMap:
         self.needs_cls = getattr(inner, "needs_cls", True) if inner is not None else False
         self.proportional = getattr(inner, "proportional", False) if inner is not None else False
         self.name = f"{cfg.name}:{inner.name if inner is not None else 'dense'}" + (":passive" if passive else "")
-        self.ops, self._emb, self.fired_mask = [], None, None
+        self.ops, self._emb, self.fired_mask, self.tiers = [], None, None, None   # tiers: (high, middle) grids, read by diag.py
+        self.cam = None                                                           # the frame's camera shift (dy, dx), read by diag.py
         self.alt, self._alt_frame, self._raw = None, False, None   # R40 M: the baseline (the fallback's inner method)
 
     def __getattr__(self, attr):
@@ -248,7 +263,10 @@ class ExpectMap:
         return getattr(inner, attr)
 
     def start(self, st):
-        self._alt_frame, self._raw = False, st.interest                           # the map as a fallback frame gets it
+        self._alt_frame, self._raw, self.tiers, self.cam = False, st.interest, None, None   # the evaluator's map
+        if self.passive:                                                          # a fallback frame runs the compared
+            st.interest = None                                                    # baseline exactly: no map (audit
+                                                                                  # 2026-11-23: ToMe read it as a prior)
         if self.inner is not None and hasattr(self.inner, "start"):
             self.inner.start(st)
             self.ops = self.inner.ops
@@ -299,6 +317,7 @@ class ExpectMap:
         if S_.prev is None or S_.grid != (gh, gw):
             S_.prev, S_.grid, S_.prev_pool = f, (gh, gw), pool
             S_.ehist.clear()
+            S_.streak = S_.hold_left = None
             self._update_protos(None)
             S_.last = {"high": 0, "mid": 0, "global": False, "g": (0, 0), "first": True}
             return x, k
@@ -306,6 +325,7 @@ class ExpectMap:
         S = f @ S_.prev.T                                                          # (N, N)
         self.ops.append((b, "expect_sim", 2 * N * N * D))
         g = camera(S, gh, gw, cfg.r_cam)
+        self.cam = g
         if floor:
             e, border, fl = floor_mismatch(pool, S_.prev_pool, gh, gw, g, cfg.sigma, cfg.tol)
             self.ops.append((b, "expect_floor", fl))
@@ -317,6 +337,7 @@ class ExpectMap:
             S_.ehist.popleft()
         if self.passive or st.interest is None:
             S_.prev, S_.prev_pool = f, pool
+            S_.streak = S_.hold_left = None
             S_.last = {"high": 0, "mid": 0, "global": False, "g": g, "passive": True}
             return x, k
         src = st.src[0]
@@ -353,9 +374,10 @@ class ExpectMap:
             if cfg.ring:
                 add_m |= ring
         if fast and self.alt is not None:                                        # the baseline runs this frame, on the
-            self._alt_frame = True                                                # input a fallback frame gets
-            st.interest = self._raw
+            self._alt_frame = True                                                # as a fallback frame: no map
+            st.interest = None
             S_.prev, S_.prev_pool = f, pool
+            S_.streak = S_.hold_left = None
             S_.last = {"high": 0, "mid": 0, "global": False, "g": g, "mbase": True}
             return x, k
         if cfg.score == "z" and len(hist) >= 3:                                   # tolerance from up to `win` frames
@@ -368,14 +390,26 @@ class ExpectMap:
         fired = ((sc >= cfg.thr) | border).reshape(gh, gw)
         low = ~high_now
         fired_low = fired & low
-        add_h |= fired_low & zone
-        add_m |= fired_low & ~zone
-        glob = bool(fired_low.sum() > cfg.global_frac * low.sum())
+        eff, promote = fired_low, torch.zeros_like(fired_low)
+        if cfg.fired_high or cfg.esc or cfg.hold:                                     # R40 plan T
+            z = torch.zeros(gh, gw, dtype=torch.int32, device=dev)
+            streak = shift(S_.streak, *g) if S_.streak is not None else z
+            S_.streak = torch.where(fired_low, streak + 1, z)
+            if cfg.hold:
+                hl = (shift(S_.hold_left, *g) - 1).clamp_min(0) if S_.hold_left is not None else z
+                S_.hold_left = torch.where(grow(fired_low, 1) & low, torch.full_like(hl, cfg.hold + 1), hl)
+                eff = fired_low | ((S_.hold_left > 0) & low)
+            promote = eff & (torch.ones_like(eff) if cfg.fired_high else
+                             (S_.streak >= cfg.esc) if cfg.esc else torch.zeros_like(eff))
+        add_h |= (eff & zone) | promote
+        add_m |= eff & ~zone
+        glob = bool(fired_low.sum() > cfg.global_frac * low.sum())                    # the share that fired on this frame
         if glob:
             add_m |= low
         new_h = add_h & low
         new_m = add_m & low & ~new_h
         self.fired_mask = fired_low
+        self.tiers = (high_now | new_h, new_m)                                    # the frame's final tiers (logging only)
         S_.prev, S_.prev_pool = f, pool
         S_.last = {"high": int(new_h.sum()), "mid": int(new_m.sum()), "global": glob, "g": g}
         return self._apply(b, x, k, st, src[new_h.flatten()], src[new_m.flatten()])

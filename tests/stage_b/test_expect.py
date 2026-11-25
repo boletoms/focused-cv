@@ -1,4 +1,4 @@
-"""R40 redesign (`src/stage_b/expect.py`): block matching and camera shift recover known displacements; the mismatch is
+"""R40 expectation focus map (`src/stage_b/expect.py`): block matching and camera shift recover known displacements; the mismatch is
 zero on unchanged content and one on new border content; the wrapper only promotes (high 1.0, middle tier 0.5), never
 demotes, sends target-related surprises to high interest, applies the global rule, and a passive wrapper only observes;
 run-time object states detect a collapse and keep the last tracked centroid; names round-trip. CPU."""
@@ -103,7 +103,7 @@ def test_global_rule_and_passive():
     st, x = _st(f0, torch.zeros(gh, gw, dtype=torch.bool))
     passive.start(st)
     passive.after_attn(0, x, None, None, st)
-    assert state.prev is not None and float(st.interest.max()) == 0.0
+    assert state.prev is not None and st.interest is None             # observes; the baseline gets no map (audit)
     f1 = _feat(gh, gw, seed=2)                                       # everything changed
     st, x = _st(f1, torch.zeros(gh, gw, dtype=torch.bool))
     w.start(st)
@@ -278,3 +278,43 @@ def test_tome_tiered_rate_keeps_the_middle_tier():
     assert all(h == 80 for _, _, h in fixed + rate)                      # the high tier is never merged
     assert fixed[-1][0] < 0.1 * mid0                                     # R-34: the fixed count collapses the middle tier
     assert rate[-1][0] > 0.45 * mid0                                     # the rate keeps about plain ToMe's share (52%)
+
+
+def _hold_run(name, frames):
+    """Frames of random features: `frames` lists, per frame, the patches whose content is replaced (a surprise)."""
+    gh, gw = 12, 16
+    cfg = ex.config_from_name(name)
+    state = ex.ExpectState()
+    w = ex.ExpectMap(_Inner(), state, cfg)
+    f = _feat(gh, gw)
+    M = torch.zeros(gh, gw, dtype=torch.bool)
+    M[1:3, 1:3] = True
+    state.objects = [{"id": 1, "M": M, "T": M, "core": M.clone(), "speed": 0.0, "lost": False, "n": 0, "c": (1.5, 1.5),
+                      "v": (0.0, 0.0)}]
+    out = []
+    for i, ch in enumerate(frames):
+        f = f.clone()
+        for j, (y, x_) in enumerate(ch):
+            f[y, x_] = _feat(1, 1, f.shape[-1], 100 + 10 * i + j)[0, 0]
+        st, x = _st(f, ex.grow(M, 1))
+        w.start(st)
+        w.after_attn(0, x, None, None, st)
+        out.append(st.interest[0].reshape(gh, gw).clone())
+    return out
+
+
+def test_plan_t_names_and_escalation_and_hold():
+    for n in ("exp-x0-mot-rl-r0-e0.5-ring-srch-fh", "exp-x0-mot-rl-r0-e0.5-ring-srch-esc2", "exp-x0-mot-rl-r0-e0.5-ring-srch-hold3",
+              "exp-pix-mot-rl-r0-e0.06-ring-srch-f0.05-o1-esc2-hold3"):
+        assert ex.config_from_name(n).name == n
+    spot = (10, 14)                                                  # far from the object's zone
+    base = "exp-x0-rl-r0-e0.5-ring"
+    plain = _hold_run(base, [[], [spot], [spot], []])
+    assert float(plain[1][spot]) == 0.5 and float(plain[2][spot]) == 0.5 and float(plain[3][spot]) == 0.0
+    fh = _hold_run(base + "-fh", [[], [spot]])
+    assert float(fh[1][spot]) == 1.0                                 # every fired patch at full resolution
+    esc = _hold_run(base + "-esc2", [[], [spot], [spot], [spot]])
+    assert float(esc[1][spot]) == 0.5 and float(esc[2][spot]) == 1.0 and float(esc[3][spot]) == 1.0
+    hold = _hold_run(base + "-hold2", [[], [spot], [], [], []])
+    assert float(hold[1][spot]) == 0.5 and float(hold[2][spot]) == 0.5 and float(hold[3][spot]) == 0.5
+    assert float(hold[4][spot]) == 0.0                               # released after two frames without firing

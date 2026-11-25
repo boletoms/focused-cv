@@ -8,7 +8,8 @@
     16.940095901489258,
     16.95243263244629
    ],
-   "frames": 114
+   "frames": 114,
+   "speedup_vs_dense_graph": 1.0
   },
   "L_csvo_fix": {
    "ms_per_frame": 9.252592086791992,
@@ -20,7 +21,8 @@
    "counted_flops_ratio": 0.066466656137096,
    "overflow_share": 0.10526315789473684,
    "fallback_share": 0.0,
-   "graphs": 536
+   "graphs": 536,
+   "speedup_vs_dense_graph": 1.83119457483504
   },
   "ALGM_csvo_fix": {
    "ms_per_frame": 9.463856220245361,
@@ -32,7 +34,8 @@
    "counted_flops_ratio": 0.09786716246861495,
    "overflow_share": 0.006578947368421052,
    "fallback_share": 0.0,
-   "graphs": 277
+   "graphs": 277,
+   "speedup_vs_dense_graph": 1.7903163402091333
   },
   "dense_det_fix": {
    "ms_per_frame": 18.073376655578613,
@@ -40,7 +43,8 @@
     18.066944122314453,
     18.080959796905518
    ],
-   "frames": 114
+   "frames": 114,
+   "speedup_vs_dense_graph": 1.0
   },
   "L_csvo_det_fix": {
    "ms_per_frame": 11.07748794555664,
@@ -52,7 +56,8 @@
    "counted_flops_ratio": 0.06646091912347679,
    "overflow_share": 0.10526315789473684,
    "fallback_share": 0.0,
-   "graphs": 518
+   "graphs": 518,
+   "speedup_vs_dense_graph": 1.6315410808303463
   },
   "ALGM_csvo_det_fix": {
    "ms_per_frame": 9.690592288970947,
@@ -64,7 +69,79 @@
    "counted_flops_ratio": 0.09784558339466745,
    "overflow_share": 0.0,
    "fallback_share": 0.0,
-   "graphs": 277
+   "graphs": 277,
+   "speedup_vs_dense_graph": 1.8650435511716117
+  },
+  "dense_audit": {
+   "ms_per_frame": 16.943711280822754,
+   "ms_iqr": [
+    16.9382004737854,
+    17.107064247131348
+   ],
+   "frames": 114,
+   "speedup_vs_dense_graph": 1.0
+  },
+  "L_csvo_audit": {
+   "ms_per_frame": 9.195152282714844,
+   "ms_iqr": [
+    7.621000051498413,
+    10.338160276412964
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.3963855038325509,
+   "overflow_share": 0.10526315789473684,
+   "fallback_share": 0.0,
+   "graphs": 536,
+   "speedup_vs_dense_graph": 1.8426787028501685
+  },
+  "ALGM_csvo_audit": {
+   "ms_per_frame": 9.600799560546875,
+   "ms_iqr": [
+    8.333248376846313,
+    11.203416109085083
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.5659588435432641,
+   "overflow_share": 0.006578947368421052,
+   "fallback_share": 0.0,
+   "graphs": 277,
+   "speedup_vs_dense_graph": 1.7648229372947783
+  },
+  "dense_det_audit": {
+   "ms_per_frame": 18.092080116271973,
+   "ms_iqr": [
+    18.081543445587158,
+    18.116559982299805
+   ],
+   "frames": 114,
+   "speedup_vs_dense_graph": 1.0
+  },
+  "L_csvo_det_audit": {
+   "ms_per_frame": 11.011759757995605,
+   "ms_iqr": [
+    9.723207950592041,
+    12.41204833984375
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.3964381704126036,
+   "overflow_share": 0.10526315789473684,
+   "fallback_share": 0.0,
+   "graphs": 518,
+   "speedup_vs_dense_graph": 1.6429780992211864
+  },
+  "ALGM_csvo_det_audit": {
+   "ms_per_frame": 10.10918378829956,
+   "ms_iqr": [
+    8.61189603805542,
+    11.520847797393799
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.5659037654655783,
+   "overflow_share": 0.0,
+   "fallback_share": 0.0,
+   "graphs": 277,
+   "speedup_vs_dense_graph": 1.7896677412484945
   }
- }
+ },
+ "_note": "Rows without the suffix _audit carry the FLOPs count from before the width fix of the 2026-11-23 audit (counted_flops_ratio is wrong in them); the timings are unchanged. Use the _audit rows for FLOPs."
 }

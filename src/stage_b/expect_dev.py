@@ -1,4 +1,4 @@
-"""R40 plan section L (implementation only, method unchanged): the redesign's per-frame steps before the encoder on device
+"""R40 plan section L (implementation only, method unchanged): the expectation focus map's per-frame steps before the encoder on device
 values, so that no step reads a value back to the host and each step can be captured in a CUDA graph.
 - `moved_union`: `p2_davis.shift_by_velocity(cur, prev) > 0` (each object's mask moved by its centroid displacement,
   united with the current mask), over a fixed list of candidate ids.

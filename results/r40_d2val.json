@@ -2,13 +2,13 @@
  "setting": "titome_t0.98_l0.7_floor64_dil1_cls64_ha1~algm_t0.98@exp-pix-mot-rl-r0-e0.06-ring-srch-f0.05-o1",
  "objects": 239,
  "flops": 0.34843917603288627,
- "minus_redesign": [
+ "minus_method": [
   -5.131943270260582,
   -6.912787774322221,
   -3.477295348307343
  ],
- "redesign_flops": 0.3879700554814296,
- "minus_redesign_per_head": {
+ "method_flops": 0.3879700554814296,
+ "minus_method_per_head": {
   "r31c": [
    -5.024982999645085,
    -7.27190735800991,

@@ -7,7 +7,7 @@ R24 suffixes (as `eval_lvos.py`, short clips): `@hold{h}`, `@motion`, `@surpAmap
 trigger frames. R27: `@surpA2map` / `@surpA2key` (signal A corrected, see `eval_lvos.py`); rows count empty-map frames
 whatever ran on them. R28: `@srp_<detector>` (surprise, as `eval_lvos.py`; the empty-map fallback here is dense, so
 those frames run the observer).
-R40: `@exp-...` (the redesign, as `eval_lvos.py`; needs `setting~fallback`). R29: `setting~fallback` runs that method on empty-map frames instead of dense (as `eval_lvos.py`); environment
+R40: `@exp-...` (the expectation focus map, as `eval_lvos.py`; needs `setting~fallback`). R29: `setting~fallback` runs that method on empty-map frames instead of dense (as `eval_lvos.py`); environment
 VOS_FAST=1 runs the ViT on the fast bf16 SDPA path of the long-video evaluator instead of eager fp32 attention.
 Usage (ml-base:vos): python -m src.stage_b.vos.eval <weights.pth> <out_dir> <setting,setting,...> [keyframe|-] [max videos]"""
 import os
@@ -23,6 +23,8 @@ import numpy as np
 import torch
 from PIL import Image
 from torchvision.transforms.functional import to_tensor
+
+from src.stage_b.vos import rowio
 
 DAVIS = Path("/work/data/davis/DAVIS")
 
@@ -69,7 +71,7 @@ def main(weights, out_dir, settings, keyframe=None, max_seq=None):
     seqs = (DAVIS / "ImageSets/2017/val.txt").read_text().split()[: int(max_seq) if max_seq else None]
     for seq in seqs:
         f = out / "sequences" / f"{seq}.json"
-        if f.exists():
+        if rowio.done(f, [x for x in settings.split(",") if x]):     # complete and for these settings (else an error)
             continue
         try:
             os.close(os.open(out / "sequences" / f"{seq}.claim", os.O_CREAT | os.O_EXCL))
@@ -92,7 +94,7 @@ def main(weights, out_dir, settings, keyframe=None, max_seq=None):
             sig_a2 = next((x[6:] for x in mods if x in ("surpA2map", "surpA2key")), None)    # R27 correction
             sig_b = "surpBkey" in mods
             srp = next((x for x in mods if x.startswith("srp_")), None)
-            expm = next((x for x in mods if x.startswith("exp-")), None)          # R40 redesign (as `eval_lvos.py`)
+            expm = next((x for x in mods if x.startswith("exp-")), None)          # R40 expectation focus map (as `eval_lvos.py`)
             history, idx_prev, idx_prev2, dense_next, extra_next, areas, triggers = [], None, None, False, None, {}, 0
             empty = 0
             proc = InferenceCore(net, cfg=cfg)
@@ -117,7 +119,7 @@ def main(weights, out_dir, settings, keyframe=None, max_seq=None):
                 motion = motion or ecfg.motion
             graph2 = os.environ.get("VOS_GRAPH") == "2" and estate is not None   # R40 plan L (as `eval_lvos.py`)
             if graph2:
-                assert not (keyframe or hold > 1 or sig_a or sig_a2 or sig_b), "VOS_GRAPH=2 covers the redesign's own settings only"
+                assert not (keyframe or hold > 1 or sig_a or sig_a2 or sig_b), "VOS_GRAPH=2 covers the expectation focus map's own settings only"
                 enc.frame_setting, g2_reset = name, True
             prev, js, fs, fl, fallbacks = gt[0] > 0, {o: [] for o in objects}, {o: [] for o in objects}, [], 0
 
@@ -226,7 +228,7 @@ def main(weights, out_dir, settings, keyframe=None, max_seq=None):
                          "srp_share": srp_share / max(1, len(fl)), "srp_global": srp_global,
                          "exp_high_share": exp_high / max(1, len(fl)), "exp_mid_share": exp_mid / max(1, len(fl)),
                          "exp_global": exp_global, "exp_lost_fallbacks": exp_lostfb})
-        f.write_text(json.dumps(rows))
+        rowio.write(f, rows)                                          # atomic: no partial row after an interruption
         print(f"{seq} done", flush=True)
     print("done", flush=True)
 

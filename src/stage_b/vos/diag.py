@@ -50,15 +50,17 @@ class DiagLog:
         self.path = Path(out) / "diag" / seq
         self.path.mkdir(parents=True, exist_ok=True)
         self.spec, self.index, self.objects, self.with_gt = spec, index, list(objects), with_gt
-        self.rows = {k: [] for k in ("t", "flops", "fallback", "dense", "empty", "oracle", "mem", "map_grid", "srp_grid")}
+        self.rows = {k: [] for k in ("t", "flops", "fallback", "dense", "empty", "oracle", "mem", "map_grid", "srp_grid", "tier_h", "tier_m", "cam_y", "cam_x")}
         self.obj = {k: [] for k in ("j", "f", "gt_px", "pred_px", "inter_px", "gt_c", "pred_c", "map_cov", "prob_gt",
-                                    "prob_out", "prob_grid", "gt_grid")}
+                                    "prob_out", "prob_grid", "gt_grid", "cov_h", "cov_hm")}
 
     def frame(self, t, first, interest_mask, prob, small, tmp2obj, gt_eval, flops, fallback, dense, empty,
-              oracle, mem, srp_grid, jf_now):
+              oracle, mem, srp_grid, jf_now, tiers=None, cam=None):
         """interest_mask (h, w) bool; prob (K + 1, h, w); small
         (h, w) object ids; tmp2obj {prob channel: object id}; gt_eval (h, w) object ids at the evaluation size or
-        None; jf_now {object: (j, f)} scored on this frame; srp_grid (gh, gw) bool or None."""
+        None; jf_now {object: (j, f)} scored on this frame; srp_grid (gh, gw) bool or None; tiers (high, middle) (gh, gw)
+        bool grids of the expectation focus map's final tiers, or None (cov_h, cov_hm: the share of the object's ground
+        truth inside the high tier and inside high or middle; NaN without tiers)."""
         mg = to_grid(interest_mask) >= THETA
         prot = F.max_pool2d(mg.float()[None, None], 3, 1, 1)[0, 0] > 0           # dil1 on the grid
         outside = ~prot
@@ -69,6 +71,11 @@ class DiagLog:
         self.rows["map_grid"].append(np.packbits(mg.cpu().numpy().ravel()))
         sg = srp_grid if srp_grid is not None else torch.zeros_like(mg)
         self.rows["srp_grid"].append(np.packbits(sg.cpu().numpy().ravel()))
+        th, tm = tiers if tiers is not None else (torch.zeros_like(mg), torch.zeros_like(mg))
+        self.rows["tier_h"].append(np.packbits(th.cpu().numpy().ravel()))
+        self.rows["tier_m"].append(np.packbits(tm.cpu().numpy().ravel()))
+        self.rows["cam_y"].append(cam[0] if cam is not None else -999)       # camera shift in patches (-999: none)
+        self.rows["cam_x"].append(cam[1] if cam is not None else -999)
         chan = {oid: i for i, oid in tmp2obj.items()}
         vals = {k: [] for k in self.obj}
         for o in self.objects:
@@ -88,6 +95,8 @@ class DiagLog:
             vals["pred_c"].append(_centroid(pred))
             gg = to_grid(gt.float())
             vals["map_cov"].append(float((gg * prot).sum() / gg.sum()) if n_gt else float("nan"))
+            vals["cov_h"].append(float((gg * th).sum() / gg.sum()) if n_gt and tiers is not None else float("nan"))
+            vals["cov_hm"].append(float((gg * (th | tm)).sum() / gg.sum()) if n_gt and tiers is not None else float("nan"))
             vals["prob_gt"].append(float(p[gt].mean()) if n_gt else float("nan"))
             vals["prob_out"].append(float(pg[outside].max()) if bool(outside.any()) else 0.0)
             vals["prob_grid"].append((pg.clamp(0, 1) * 255).round().to(torch.uint8).cpu().numpy())
@@ -97,9 +106,11 @@ class DiagLog:
             self.obj[k].append(v)
 
     def save(self):
-        out = {k: np.array(v) for k, v in self.rows.items() if k not in ("map_grid", "srp_grid")}
+        out = {k: np.array(v) for k, v in self.rows.items() if k not in ("map_grid", "srp_grid", "tier_h", "tier_m")}
         out["map_grid"] = np.stack(self.rows["map_grid"]) if self.rows["map_grid"] else np.zeros((0, 0), np.uint8)
         out["srp_grid"] = np.stack(self.rows["srp_grid"]) if self.rows["srp_grid"] else np.zeros((0, 0), np.uint8)
+        for k in ("tier_h", "tier_m"):
+            out[k] = np.stack(self.rows[k]) if self.rows[k] else np.zeros((0, 0), np.uint8)
         for k, v in self.obj.items():
             if k == "gt_grid" and not self.with_gt:
                 continue

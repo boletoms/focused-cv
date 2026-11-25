@@ -21,7 +21,7 @@ exec docker run --rm $TTY_FLAGS --name "$NAME" --gpus all \
   --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
   -v "$ROOT":/workspace \
   -v "$WORK":/work \
-  -v /mnt/data:/data \
+  -v "${DATA_DIR:-/mnt/data}":/data \
   -e HF_HOME=/work/cache/hf \
   -e TORCH_HOME=/work/cache/torch \
   -e HF_TOKEN \

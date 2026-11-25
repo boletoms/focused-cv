@@ -1,7 +1,16 @@
 # Heads
 
 Cutie (small) with the frozen DINOv3 ViT as its stride-16 pixel encoder; the ViT is frozen and dense during training.
-Data: DAVIS 2017 train and MOSE train, Cutie's training script, no static-image pre-training, no YouTube-VOS.
+Data: DAVIS 2017 train and MOSE train with Cutie's training script; we add no static-image or YouTube-VOS training,
+but every head starts from the official `cutie-small-mega` weights, which their authors trained on static images, DAVIS,
+YouTube-VOS, MOSE, BURST and OVIS, so the heads inherit that training.
+
+First prepare the initial weights once (reads `cutie-small-mega.pth` from `/work/data/downloads/cutie_weights/`, keeps
+every non-ViT tensor except the two new stride-16 projections):
+
+```bash
+IMAGE=ml-base:vos bash scripts/run.sh python -c "from src.stage_b.vos.train import prepare_r26_init; prepare_r26_init()"
+```
 
 | Head | Backbone | Recipe (`python -m src.stage_b.vos.train <id> <iterations> 2 - ...`) |
 | --- | --- | --- |

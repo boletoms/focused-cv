@@ -7,9 +7,9 @@ scorers, pooled, per split (V1 val, the 90 new) and by the toolkit's seen / unse
 (LVOS: the mean of seen and unseen J and F).
 `vitb3`: plan section P (ViT-B heads r41_b1 to b3; against ALGM 0.95; section C's rules on our scorer).
 `vitl`: plan section N on the rerun rows (one head; against the picked plain ALGM and dense).
-`davis`: Tables 3 and 4 under both scorers (every setting against dense, the redesign against each), per backbone.
+`davis`: Tables 3 and 4 under both scorers (every setting against dense, the expectation focus map against each), per backbone.
 `all`: every part whose runs exist -> `reports/stage_b/queue/r40_official.json`, with Holm-adjusted two-sided bootstrap
-p-values (1,000 resamples, as the intervals) for each family of secondary comparisons: per backbone the method against
+p-values (10,000 whole-video resamples) for each family of secondary comparisons: per backbone the method against
 every short-clip baseline; per protocol the per-head and per-split differences. The pre-registered primary comparison
 (head-averaged, against the reference merger) is not adjusted.
 Usage: python -m src.stage_b.vos.r40_official [check|claim|vitb3|vitl|davis|all]"""
@@ -23,7 +23,36 @@ from .r28_compare import V, ci, load
 from .r40_compare import HEADS, Q, S_FINAL, SB_FINAL, SL_FINAL
 
 NEW90 = set((Q / "v2valid_new.txt").read_text().split())
-V1 = {p.name for p in Path("/work/data/lvos/valid/JPEGImages").iterdir()}       # LVOS V1 val (50 videos)
+class _V1:                                                                          # LVOS V1 val (50 videos): the
+    def __contains__(self, s):                                                      # V2 valid videos not in the 90
+        return s not in NEW90                                                       # new (no data read at import)
+
+
+V1 = _V1()
+
+
+def pval_video(x, videos, n=10000, seed=0):
+    """Two-sided p-value of an object-weighted mean difference with whole videos resampled (objects of one video share
+    frames and tracker state), null-centred, with the +1 correction, so the smallest value is 1/(n+1) (audits
+    2026-11-23; replaces `pval` in the secondary families)."""
+    x, videos = np.asarray(x, float), np.asarray(videos)
+    names = sorted(set(videos.tolist()))
+    sums = np.array([x[videos == v].sum() for v in names]); cnt = np.array([(videos == v).sum() for v in names])
+    m = sums.sum() / cnt.sum()
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, len(names), (n, len(names)))
+    b = sums[idx].sum(1) / cnt[idx].sum(1) - m
+    return float((1 + (np.abs(b) >= abs(m)).sum()) / (n + 1))
+
+
+def ci_video(x, videos, n=10000, seed=0):
+    """Mean and 95% percentile interval of an object-weighted mean with whole videos resampled."""
+    x, videos = np.asarray(x, float), np.asarray(videos)
+    names = sorted(set(videos.tolist()))
+    sums = np.array([x[videos == v].sum() for v in names]); cnt = np.array([(videos == v).sum() for v in names])
+    idx = np.random.default_rng(seed).integers(0, len(names), (n, len(names)))
+    b = sums[idx].sum(1) / cnt[idx].sum(1)
+    return [float(sums.sum() / cnt.sum())] + [float(v) for v in np.percentile(b, [2.5, 97.5])]
 
 
 def pval(x, seed=0):
@@ -120,8 +149,8 @@ def check():
                 out[f"{h} {k} V1"] = _same(Rows(f"eval_om_{h}_base", k, V1), Rows(r1, k, V1))
                 out[f"{h} {k} new90"] = _same(Rows(f"eval_om_{h}_base", k, NEW90), Rows(r2, k, NEW90))
         if (V / f"eval_om_{h}_r40").exists():
-            out[f"{h} redesign V1"] = _same(Rows(f"eval_om_{h}_r40", S_FINAL, V1), Rows(f"eval_r40o_{h}_v1val", S_FINAL))
-            out[f"{h} redesign new90"] = _same(Rows(f"eval_om_{h}_r40", S_FINAL, NEW90), Rows(f"eval_r40o_{h}_v2new", S_FINAL, NEW90))
+            out[f"{h} method V1"] = _same(Rows(f"eval_om_{h}_r40", S_FINAL, V1), Rows(f"eval_r40o_{h}_v1val", S_FINAL))
+            out[f"{h} method new90"] = _same(Rows(f"eval_om_{h}_r40", S_FINAL, NEW90), Rows(f"eval_r40o_{h}_v2new", S_FINAL, NEW90))
     for new, old in (("eval_om_davis_all", "eval_r40_davis_all"), ("eval_om_davis_r40", "eval_r40o_davis"),
                      ("eval_omb_davis_all", "eval_r40b_davis"), ("eval_omb_davis_r40", "eval_r40ob_davis"),
                      ("eval_oml_davis_all", "eval_r34_cutie")):
@@ -136,7 +165,7 @@ def check():
 
 
 def _long(heads, new_k, ref_k, rules):
-    """heads: {name: (base run, redesign run)}; head-averaged per-object differences (section C) under both scorers,
+    """heads: {name: (base run, expectation focus map run)}; head-averaged per-object differences (section C) under both scorers,
     pooled and per split / seen-unseen; per head; toolkit-style averages per head."""
     parts = {"all": None, "v1val": V1, "new90": NEW90}
     out = {"setting": new_k, "reference": ref_k, "heads": list(heads)}
@@ -178,12 +207,19 @@ def _long(heads, new_k, ref_k, rules):
                            if rows[h][new_k].off is not None and rows[h][ref_k].off is not None else None,
                            "flops": rows[h][new_k].flops, "ref_flops": rows[h][ref_k].flops,
                            "toolkit": {k: rows[h][k].toolkit() for k in (new_k, ref_k, "dense")}} for h in heads}
-    fam = {}                                                            # secondary: per head and per split (ours)
+    fam = {}                                                            # secondary: per head and per split (ours),
+    vids = np.array([s for s, o in keys])                               # resampling whole videos
     for h in heads:
-        fam[f"head {h}"] = pval(rows[h][new_k].ours - rows[h][ref_k].ours)
+        fam[f"head {h}"] = pval_video(rows[h][new_k].ours - rows[h][ref_k].ours, vids)
     for part, want in (("v1val", V1), ("new90", NEW90)):
         m = np.array([s in want for s, o in keys])
-        fam[f"split {part}"] = pval(np.mean([rows[h][new_k].ours[m] - rows[h][ref_k].ours[m] for h in heads], 0))
+        fam[f"split {part}"] = pval_video(np.mean([rows[h][new_k].ours[m] - rows[h][ref_k].ours[m] for h in heads], 0), vids[m])
+    d_all = np.mean([rows[h][new_k].ours - rows[h][ref_k].ours for h in heads], 0)
+    dd_all = np.mean([rows[h][new_k].ours - rows[h]["dense"].ours for h in heads], 0)
+    out["video_cluster"] = {"minus_ref": ci_video(d_all, vids), "minus_dense": ci_video(dd_all, vids),
+                            "p_minus_ref": pval_video(d_all, vids),
+                            "new90_minus_ref": ci_video(d_all[np.isin(vids, list(NEW90))], vids[np.isin(vids, list(NEW90))]),
+                            "per_head_minus_ref": {h: ci_video(rows[h][new_k].ours - rows[h][ref_k].ours, vids) for h in heads}}
     out["secondary_p_ours"] = fam
     out["secondary_p_ours_holm"] = holm(fam)
     return out
@@ -210,16 +246,20 @@ def _davis_one(run_all, run_new, new_k):
         if k == "dense":
             continue
         e = {"flops": r.flops, "jf_ours": float(r.ours.mean()), "minus_dense_ours": ci(_diffs(r, dn)["ours"]), "toolkit": r.toolkit()}
+        e["minus_dense_ci_video"] = ci_video(_diffs(r, dn)["ours"], np.array([s_ for s_, o_ in r.keys]))
         d = _diffs(r, dn)
         if "official" in d:
             e["minus_dense_official"] = ci(d["official"])
         if k != new_k:
             d = _diffs(new, r)
-            e["redesign_minus_ours"] = ci(d["ours"])
-            e["p_ours"] = pval(d["ours"])
+            e["method_minus_ours"] = ci(d["ours"])
+            vid = np.array([s_ for s_, o_ in new.keys])                     # whole videos resampled (30 clips)
+            e["p_ours"] = pval_video(d["ours"], vid)
+            e["ci_video_ours"] = ci_video(d["ours"], vid)
             if "official" in d:
-                e["redesign_minus_official"] = ci(d["official"])
-                e["p_official"] = pval(d["official"])
+                e["method_minus_official"] = ci(d["official"])
+                keep = ~np.isnan(new.off - r.off)
+                e["p_official"] = pval_video(d["official"], vid[keep])
         res["settings"][k] = e
     for sc in ("ours", "official"):                                     # Holm within the backbone's table
         ps = {k: e[f"p_{sc}"] for k, e in res["settings"].items() if f"p_{sc}" in e}

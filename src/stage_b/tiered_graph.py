@@ -1,4 +1,4 @@
-"""R40 plan section K (owner 2026-11-21, "continue with recommended", after R-35): the redesign and its fallback under
+"""R40 plan section K (owner 2026-11-21, "continue with recommended", after R-35): the expectation focus map and its fallback under
 CUDA graphs, with the method unchanged. Same tiers, same merges, same order as `expect.ExpectMap` around
 `baselines.ALGMTiered` (ALGM's rules outside the high tier, our budget `methods.InterestToMe` on the low tier) and
 plain `baselines.ALGM` (the fallback); only the execution differs:
@@ -44,7 +44,7 @@ class Spec:
 
 
 def spec_of(method):
-    """The execution spec of an `ExpectMap` around `ALGMTiered` (the redesign) or around plain `ALGM` (its fallback)."""
+    """The execution spec of an `ExpectMap` around `ALGMTiered` (the expectation focus map) or around plain `ALGM` (its fallback)."""
     from .baselines import ALGM, ALGMTiered
     from .methods import InterestToMe
     inner = method.inner
@@ -356,7 +356,7 @@ def compiled(fn):
 
 
 class TieredRunner:
-    """Runs the redesign (or its fallback) on padded buffers, eagerly or with one CUDA graph per (block, capacity)."""
+    """Runs the expectation focus map (or its fallback) on padded buffers, eagerly or with one CUDA graph per (block, capacity)."""
 
     def __init__(self, model, hw, step=32, fast=True, dtype=torch.bfloat16, graphs=True, warmup=2, kernel="mask",
                  compile=False, overlap=False):
@@ -507,7 +507,7 @@ class TieredRunner:
         Returns (final (1, P + N0, D) float, State with tokens, pairs, tiles, padded (tokens at capacity))."""
         spec = spec_of(method)
         st = plan(method, pixels, interest)
-        assert spec.plain or st.interest is not None, "the redesign without a map runs dense (not on this path)"
+        assert spec.plain or st.interest is not None, "the expectation focus map without a map runs dense (not on this path)"
         tiers = st.interest[0] if st.interest is not None else torch.zeros(self.N0, device=pixels.device)
         return self.encode(pixels, spec, tiers, method.ops, st)
 

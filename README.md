@@ -3,16 +3,20 @@
 Code for the preprint *Focus Only on What's Important: Training-Free Focus Maps for Frozen Vision Transformers in Long-Video Object Segmentation* A frozen DINOv3 ViT replaces the stride-16 pixel encoder of the Cutie video object segmenter.
 Before the encoder runs on a frame, a **focus map** decides how much compute each patch gets:
 
-- **Expectation (high tier, full resolution).** Each tracked object is expected at its last mask moved by its own
-  motion and the camera's, relocalised on the current frame by block matching on block-0 features.
-- **Surprise check (middle tier).** Each patch's early features are compared with the previous frame's, moved by the
-  expected motion, with a per-area tolerance. Patches that changed without explanation, and a ring around each
-  object scaled by its speed, are the middle tier. They use the baseline merger's rules (ALGM) with a tighter budget.
-- **Low tier.** Everything else is merged aggressively.
+- **Expectation (high tier, never merged).** Each tracked object is expected at its last mask moved by its centroid
+  velocity and by a block-matching displacement found on the current frame's 4x4-pooled pixels (search radius 8
+  patches), grown by one patch.
+- **Surprise check.** Each patch outside the expectation compares its pooled pixels with the previous frame's, shifted
+  by the integer camera motion (radius 4 patches), with a variance floor and a 4-pixel tolerance. Fired patches inside
+  an object's ring or a lost object's search region join the high tier; other fired patches, the speed-scaled rings
+  and the search regions form the **middle tier**, which the compared merger's own rules (ALGM) merge, unchanged.
+- **Low tier.** Everything else is merged by ALGM's rules and then by a budget (nominal rate 0.7 per block, capped at
+  one half by pairing, down to a floor of 64 or 128 tokens).
 - **Fallback.** When every object is lost or the map is empty, the frame runs the baseline itself.
 
-The method is training-free: the ViT and the Cutie head are unchanged, and no part of the focus map is learned. On
-held-out long videos (LVOS V2 valid, 239 objects, three heads, pre-registered protocol) it is more accurate than ALGM
+The focus policy is training-free: no part of it is learned and the ViT stays frozen (Cutie's heads are trained once
+per backbone, from the official Cutie weights). On held-out long videos (LVOS V2 valid, 239 objects, three heads,
+protocol pre-specified in `docs/R40_expectation_plan.md`) it is more accurate than ALGM
 at a 16% lower encoder cost, and it is at dense level on short clips (DAVIS 2017 val). See the preprint for the
 numbers, the ablations and the limitations.
 
@@ -43,6 +47,8 @@ Requirements: Linux, an NVIDIA GPU (all results: one 16 GB consumer GPU), Docker
 ```bash
 docker build -f docker/Dockerfile -t ml-base:dev docker
 docker build -f docker/Dockerfile.vos -t ml-base:vos docker
+# docker/requirements.lock.txt records the exact package versions of every reported run; install it in place of
+# requirements.txt for an exact environment.
 export WORK=$HOME/ml_work            # data, weights, caches and results (mounted as /work)
 bash scripts/fetch_third_party.sh    # Cutie and the official evaluation toolkits at pinned commits
 ```
@@ -96,9 +102,13 @@ and setting names keep their original prefixes (`titome_...`), because they key 
 
 The code is released under the Apache License 2.0 (`LICENSE`), except the parts derived from third-party code, which
 keep their original licences. `NOTICE` lists them. In particular, the PiToMe port in `src/stage_b/baselines.py`
-(marked in the file) follows PiToMe's CC BY-NC 4.0 licence and may not be used commercially. Datasets, Cutie, DINOv3
+(marked in the file) follows PiToMe's CC BY-NC 4.0 licence and may not be used commercially (`LICENSES/PiToMe-CC-BY-NC-4.0.md` gives the attribution and the changes). Datasets, Cutie, DINOv3
 weights and the evaluation toolkits are not redistributed here; their own licences apply.
 
 ## Citation
 
 See `CITATION.cff`. The arXiv identifier is added once the preprint is public.
+
+## Data terms
+The datasets are not redistributed. LVOS (V1 and V2): annotations CC BY 4.0, evaluation toolkits BSD-3-Clause, data for non-commercial research only; the videos come from VOT-LT 2019 and LaSOT and are not the organizers' property
+(terms on the LVOS competition page). DAVIS 2017 and MOSE keep their own licences. Download from the dataset authors; `reproduce/README.md` lists the paths the scripts expect.

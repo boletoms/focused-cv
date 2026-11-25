@@ -1,9 +1,9 @@
-"""R40 plan section K (the redesign under CUDA graphs, method unchanged; `src/stage_b/tiered_graph.py`).
-`check <vits|vitb>` (K2, idle GPU): over DAVIS frames with closed-loop maps (J3's frames), three copies of the redesign
+"""R40 plan section K (the expectation focus map under CUDA graphs, method unchanged; `src/stage_b/tiered_graph.py`).
+`check <vits|vitb>` (K2, idle GPU): over DAVIS frames with closed-loop maps (J3's frames), three copies of the expectation focus map
 with their own expectation states: the current forward, the padded runner eagerly and the padded runner with graphs;
 per frame, tiers, token counts and patch assignments must agree, and outputs within tolerance (fast path, then the fp32
 attention path); the fallback on every fifth frame. Writes `r40_graph_check_<bb>.json`; exits non-zero on failure.
-`time <vits|vitb>` (K4, idle GPU, reported): J3's protocol for the redesign on the graph path (state update, tier
+`time <vits|vitb>` (K4, idle GPU, reported): J3's protocol for the expectation focus map on the graph path (state update, tier
 decision and encoder per frame), beside dense eager and with graphs; graphs are captured in a pass before timing; also
 counted FLOPs against FLOPs at the padded capacity. Writes `r40_graph_time_<bb>.json`.
 `compare` (K3, rules in the plan): graph rows against the current rows. Writes `r40_graph_equiv.json`.
@@ -34,7 +34,7 @@ def _setup(bb, dev="cuda"):
 
 
 class Loop:
-    """One copy of the redesign's closed-loop step (as `r40_timing.main`): expectation state, object states, fallback."""
+    """One copy of the expectation focus map's closed-loop step (as `r40_timing.main`): expectation state, object states, fallback."""
 
     def __init__(self, name, blocks):
         from src.stage_b.expect import config_from_name
@@ -160,10 +160,10 @@ def time_it(bb):
         x, m, imap = lp.prepare(fr)
         _, st = runner.run(x, m, imap)
         N0 = imap.shape[1]
-        stats["counted"].append(image_flops(st, ops_of(m), 0, N0)["flops"])
+        stats["counted"].append(image_flops(st, ops_of(m), 0, N0, width=model.bb.config.hidden_size)["flops"])
         pad = type(st)(size=None, coords=None, src=None, carried=None, pairs=[torch.full((1,), float(a * a)) for a, _ in st.padded],
                        tokens=st.padded, tiles=[])
-        stats["padded"].append(image_flops(pad, ops_of(m), 0, N0)["flops"])
+        stats["padded"].append(image_flops(pad, ops_of(m), 0, N0, width=model.bb.config.hidden_size)["flops"])
         stats["fallback"].append(m is lp.fb)
     for seq in seqs:                                    # capture pass: every (block, capacity) graph these frames use
         lp.reset()

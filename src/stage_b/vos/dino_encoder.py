@@ -72,7 +72,7 @@ class DinoPixelEncoder(nn.Module):
             m[lh:lh + h, lw:lw + w] = self.prev_mask.float()
             self.interest = torch.nn.functional.avg_pool2d(m[None, None], 16)[0, 0].flatten()[None]
         if os.environ.get("VOS_GRAPH") == "2" and self.frame_inputs is not None:   # R40 plan L: the frame runner
-            key = (tuple(x.shape[-2:]), self.vit.fast)
+            key = (tuple(x.shape[-2:]), self.vit.fast, self.frame_setting)   # setting: one runner per method (audit)
             if key not in self.frames:                                   # one runner (its graphs) at a time: videos
                 from src.stage_b.frame_runner import FrameRunner         # of other sizes would add GPU memory
                 if self.frames:
@@ -95,7 +95,7 @@ class DinoPixelEncoder(nn.Module):
             f4 = self.res2(self.maxpool(self.relu(self.bn1(self.conv1(x)))))
             return f16, self.layer2(f4), f4
         runner = self._graph_runner(x) if os.environ.get("VOS_GRAPH") == "1" else None
-        if runner is not None:                                           # R40 plan K: the redesign under CUDA graphs
+        if runner is not None:                                           # R40 plan K: the expectation focus map under CUDA graphs
             final, st = runner.run(x, self.structure, self.interest)
             self.states = (self.states + [st])[-4:]
             tok = final[:, N_PREFIX:]
@@ -117,7 +117,7 @@ class DinoPixelEncoder(nn.Module):
         return f16, f8, f4
 
     def _graph_runner(self, x):
-        """VOS_GRAPH=1: the redesign and its fallback (`ExpectMap` around ALGMTiered or plain ALGM) run through
+        """VOS_GRAPH=1: the expectation focus map and its fallback (`ExpectMap` around ALGMTiered or plain ALGM) run through
         `tiered_graph.TieredRunner`, one runner per input size (the last one only); anything else returns None."""
         from src.stage_b.expect import ExpectMap
         from src.stage_b.tiered_graph import TieredRunner, spec_of

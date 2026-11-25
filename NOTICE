@@ -14,7 +14,7 @@ provenance of each function is in the docstring of src/stage_b/baselines.py):
 - PiToMe (Tran et al., NeurIPS 2024), hchautran/PiToMe @ 550b5de: Creative Commons Attribution-NonCommercial 4.0
   International (CC BY-NC 4.0). The PiToMe-derived parts of src/stage_b/baselines.py (class PiToMe and the energy
   computation in class Novelty, each marked "SPDX-License-Identifier: CC-BY-NC-4.0") are under CC BY-NC 4.0, not
-  Apache 2.0, and may not be used for commercial purposes. https://creativecommons.org/licenses/by-nc/4.0/
+  Apache 2.0, and may not be used for commercial purposes. https://creativecommons.org/licenses/by-nc/4.0/ (attribution, changes and terms: LICENSES/PiToMe-CC-BY-NC-4.0.md)
 
 Not included, obtained by scripts/fetch_third_party.sh or by the user, each under its own licence:
 

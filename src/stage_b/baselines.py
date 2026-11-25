@@ -671,7 +671,7 @@ class ALGMSurprise(ALGMInterest):
 
 
 class ALGMTiered(ALGMInterest):
-    """R40 (the redesign's three tiers, `src/stage_b/expect.py`; replaces ALGMSurprise there after the R40 smoke run: ALGM's
+    """R40 (the expectation focus map's three tiers, `src/stage_b/expect.py`; replaces ALGMSurprise there after the R40 smoke run: ALGM's
     rules restricted to a scattered middle tier merge almost nothing, since a layer-1 window must lie wholly inside it).
     High interest (>= 0.75: the binary map and promotions to high) is never merged. Every other token is merged by ALGM's
     own rules, as plain ALGM would outside the map (layer-1 windows with no high patch, ALGM's threshold; layer-5 matching

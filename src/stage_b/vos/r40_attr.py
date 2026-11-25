@@ -1,11 +1,11 @@
 """R40 plan section H (review flag R-33): where the validation gain comes from. Logged rows (`VOS_DIAG=1`, deterministic
-kernels) of dense, ALGM 0.98 and the redesign, head R31c, LVOS V1 val and the 90 new V2 valid videos
+kernels) of dense, ALGM 0.98 and the expectation focus map, head R31c, LVOS V1 val and the 90 new V2 valid videos
 (`eval_r40_attr_r31c_*`). Check first: the logged rows equal the validation rows, and the logged per-frame values give
 the scored per-object J&F. Decomposition (exact): per object, the J&F difference is the sum over frame classes of
-(share of its scored frames) x (mean per-frame difference in the class); classes from the redesign's own state:
+(share of its scored frames) x (mean per-frame difference in the class); classes from the expectation focus map's own state:
 `before` the video's first fallback frame, `fallback` frames (every object lost, plain ALGM 0.98 runs), `after`
 (non-fallback frames after a fallback episode). Also, descriptively (cells defined on outcomes), the cross-table of
-per-frame loss (J below 0.1) under the redesign and under ALGM 0.98. Reported, no rule. CPU.
+per-frame loss (J below 0.1) under the expectation focus map and under ALGM 0.98. Reported, no rule. CPU.
 Usage (ml-base:vos): python -m src.stage_b.vos.r40_attr          (section H, writes r40_attr.json)
                      python -m src.stage_b.vos.r40_attr test [n]  (the same on n DG1 videos, ours against ALGM; prints)"""
 import json
@@ -14,7 +14,7 @@ import sys
 import numpy as np
 
 from .r28_compare import V, ci, load
-from .r40_compare import OURS, Q, REF, S_FINAL
+from .r40_compare import CLOSED_LOOP, Q, REF, S_FINAL
 
 RUNS = {"v1val": ("eval_r40_attr_r31c_v1val", "eval_r40_r31c_v1val", "eval_r31c_lvos_det"),
         "v2new": ("eval_r40_attr_r31c_v2new", "eval_r40_r31c_v2new", "eval_r31c_v2val")}
@@ -99,8 +99,8 @@ def summarise(objs):
 def main(mode="val", n_test="30"):
     if mode == "test":                                                       # DG1 logs: ours against ALGM 0.98
         rows = load(V / "diag_dg1")
-        seqs = sorted(s for (k, s) in rows if k == OURS)[: int(n_test)]
-        objs = [o for s in seqs for o in video("diag_dg1", s, OURS, REF, rows)]
+        seqs = sorted(s for (k, s) in rows if k == CLOSED_LOOP)[: int(n_test)]
+        objs = [o for s in seqs for o in video("diag_dg1", s, CLOSED_LOOP, REF, rows)]
         print(json.dumps(summarise(objs), indent=1))
         return
     out, every = {"setting": S_FINAL, "reference": REF, "head": "r31c", "loss_threshold": LOSS}, []

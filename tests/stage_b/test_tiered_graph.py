@@ -1,7 +1,7 @@
 """R40 plan section K1 (`src/stage_b/tiered_graph.py`): on padded buffers with garbage past the real count, block merges
 give the current code's assignment of original patches to tokens, and its features, sizes, positions and interest
 (ALGM's two layers and our budget, the fallback's plain ALGM, no-merge and floor cases); the eager padded forward of the
-redesign and of its fallback matches the current forward on DAVIS frames, with the same tiers and counted FLOPs. CPU."""
+expectation focus map and of its fallback matches the current forward on DAVIS frames, with the same tiers and counted FLOPs. CPU."""
 import math
 
 import pytest
@@ -65,25 +65,25 @@ def _case(b, n, plain=False, threshold=0.6, floor=8, rate=0.7, grid=(8, 10), see
 
 
 @pytest.mark.parametrize("seed", [0, 1, 2])
-def test_redesign_merges_layer1(seed):
+def test_focus_map_merges_layer1(seed):
     counts, n_out = _case(0, 80, seed=seed)
     assert counts[1] == 1 and counts[2] > 0, "this case should exercise both ALGM's windows and the budget"
 
 
 @pytest.mark.parametrize("seed", [0, 1, 2])
-def test_redesign_merges_layer5(seed):
+def test_focus_map_merges_layer5(seed):
     counts, _ = _case(4, 61, seed=seed)
     assert counts[1] == 1
 
 
-def test_redesign_merges_budget_only_and_floor():
+def test_focus_map_merges_budget_only_and_floor():
     counts, _ = _case(2, 70, seed=3)
     assert counts[2] > 0
     counts, n_out = _case(2, 70, seed=3, floor=1000)                    # floor reached: no budget merge
     assert counts[2] == 0 and n_out == 70
 
 
-def test_redesign_no_algm_merge():
+def test_focus_map_no_algm_merge():
     counts, _ = _case(0, 80, threshold=1.01, seed=4)
     assert counts[1] == 0
     counts, _ = _case(4, 61, seed=4, high_frac=1.0, mid_frac=0.0)       # every pair touches the high tier
@@ -133,7 +133,7 @@ def _davis_or_skip():
 
 
 def test_padded_forward_matches_current_on_davis():
-    """Two copies of the redesign with their own expectation states, frame by frame over a DAVIS sequence: the current
+    """Two copies of the expectation focus map with their own expectation states, frame by frame over a DAVIS sequence: the current
     forward (`EffModel` with the wrapper) against the padded eager runner (step 32): tiers, outputs, token counts and
     counted FLOPs; then the fallback on the last frame."""
     _davis_or_skip()

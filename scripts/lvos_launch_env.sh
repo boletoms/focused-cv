@@ -5,9 +5,15 @@
 cd "$(dirname "$0")/.."
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 ENVS=("${@:7}")
+PIDS=()
 for k in $(seq 1 $5); do
   IMAGE=ml-base:vos MPS=1 scripts/run.sh env "${ENVS[@]}" python -m src.stage_b.vos.eval_lvos "$1" "$2" "$3" - "$4" > ~/ml_work/${6}_$k.log 2>&1 &
+  PIDS+=($!)
   sleep 3
 done
-wait
+FAILED=0
+for k in "${!PIDS[@]}"; do
+  wait "${PIDS[$k]}" || { echo "worker $((k + 1)) failed (log ~/ml_work/${6}_$((k + 1)).log)"; FAILED=$((FAILED + 1)); }
+done
 date +%H:%M
+exit $FAILED

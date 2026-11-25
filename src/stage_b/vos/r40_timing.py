@@ -1,11 +1,11 @@
-"""R40 plan section J3 (reported): wall clock of the redesign beside today's design, ALGM 0.98, ToMe r64 and dense, ViT-S,
+"""R40 plan section J3 (reported): wall clock of the expectation focus map beside today's design, ALGM 0.98, ToMe r64 and dense, ViT-S,
 batch 1, bf16, idle GPU, following R8 (`src/stage_b/r8_timing.py`: DAVIS frames 448 x 784 of three sequences, 40 frames
-each, median after warm-up). Video order within each sequence, so the redesign's expectation state carries over as in
+each, median after warm-up). Video order within each sequence, so the expectation focus map's expectation state carries over as in
 the closed loop; the previous frame's ground-truth ids stand in for the prediction (the map of the map-based methods and
-the redesign's object states). The redesign's timed step includes its per-frame map motion (`shift_by_velocity`) and
+the expectation focus map's object states). The expectation focus map's timed step includes its per-frame map motion (`shift_by_velocity`) and
 object-state update (`objects_from_predictions`) besides the encoder with the expectation map, surprise check and tiers inside; frames
 where every object is lost run its fallback (plain ALGM 0.98), as the evaluator. Eager for all; CUDA graphs for dense,
-ToMe and today's design (as R8); ALGM's token counts and the redesign's tiers depend on the image, so no graph.
+ToMe and today's design (as R8); ALGM's token counts and the expectation focus map's tiers depend on the image, so no graph.
 Usage (ml-base:vos, idle GPU): python -m src.stage_b.vos.r40_timing [out json]
        python -m src.stage_b.vos.r40_timing check   (CPU, fp32, a few frames, no graphs, no timing claim: runs the code path)"""
 import json

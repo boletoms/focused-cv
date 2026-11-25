@@ -305,6 +305,77 @@
    "fallback_share": 0.0,
    "graphs": 153,
    "speedup_vs_dense_graph": 1.6607584727184335
+  },
+  "dense_audit": {
+   "ms_per_frame": 5.684768199920654,
+   "ms_iqr": [
+    5.681896090507507,
+    5.686904072761536
+   ],
+   "frames": 114,
+   "speedup_vs_dense_graph": 1.0
+  },
+  "L_csvo_audit": {
+   "ms_per_frame": 3.4644800424575806,
+   "ms_iqr": [
+    3.1051039695739746,
+    4.0452799797058105
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.44393767172315857,
+   "overflow_share": 0.13157894736842105,
+   "fallback_share": 0.0,
+   "graphs": 256,
+   "speedup_vs_dense_graph": 1.640871972201658
+  },
+  "ALGM_csvo_audit": {
+   "ms_per_frame": 3.1872960329055786,
+   "ms_iqr": [
+    2.5196000933647156,
+    3.6672879457473755
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.5139995603713602,
+   "overflow_share": 0.0,
+   "fallback_share": 0.0,
+   "graphs": 161,
+   "speedup_vs_dense_graph": 1.783570820291314
+  },
+  "dense_det_audit": {
+   "ms_per_frame": 6.160031795501709,
+   "ms_iqr": [
+    6.158048152923584,
+    6.162160158157349
+   ],
+   "frames": 114,
+   "speedup_vs_dense_graph": 1.0
+  },
+  "L_csvo_det_audit": {
+   "ms_per_frame": 4.695311784744263,
+   "ms_iqr": [
+    4.378840208053589,
+    5.217551827430725
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.4439258968509081,
+   "overflow_share": 0.15789473684210525,
+   "fallback_share": 0.0,
+   "graphs": 256,
+   "speedup_vs_dense_graph": 1.3119537270169215
+  },
+  "ALGM_csvo_det_audit": {
+   "ms_per_frame": 3.4304161071777344,
+   "ms_iqr": [
+    2.7304879426956177,
+    3.8893120884895325
+   ],
+   "frames": 114,
+   "counted_flops_ratio": 0.5141435464514786,
+   "overflow_share": 0.0,
+   "fallback_share": 0.0,
+   "graphs": 153,
+   "speedup_vs_dense_graph": 1.7957097923521816
   }
- }
+ },
+ "_note": "Rows without the suffix _audit carry the FLOPs count from before the width fix of the 2026-11-23 audit (counted_flops_ratio is wrong in them); the timings are unchanged. Use the _audit rows for FLOPs."
 }

@@ -1,0 +1,62 @@
+{
+ "setting": "dense@key20@iperm",
+ "videos": [
+  "IezdEfR0",
+  "PdatOPeT",
+  "Vh9NwLSn",
+  "afoR2rH6",
+  "f4DjwV55",
+  "iWjeKM6a",
+  "k9cLguJf",
+  "mSjSh9tj",
+  "uXO4RUO3",
+  "v3uNUctx",
+  "vr4ZIAbp",
+  "wM4lbQ4I"
+ ],
+ "warmup_video": "4obdZBCV",
+ "fallback_share": 0.0,
+ "encoder_ms": {
+  "all": {
+   "median": 5.0000159740448,
+   "mean": 5.08933948965582,
+   "p90": 5.384575843811035,
+   "p99": 5.8520625114440925,
+   "frames": 6516,
+   "mean_after_30": 5.084949373346865
+  },
+  "main": {
+   "median": 5.0000159740448,
+   "mean": 5.08933948965582,
+   "p90": 5.384575843811035,
+   "p99": 5.8520625114440925,
+   "frames": 6516,
+   "mean_after_30": 5.084949373346865
+  },
+  "fallback": null
+ },
+ "step_ms": {
+  "all": {
+   "median": 21.25289535522461,
+   "mean": 26.172825819879606,
+   "p90": 47.88520050048828,
+   "p99": 62.076450729370116,
+   "frames": 6516,
+   "mean_after_30": 26.873901662925686
+  },
+  "main": {
+   "median": 21.25289535522461,
+   "mean": 26.172825819879606,
+   "p90": 47.88520050048828,
+   "p99": 62.076450729370116,
+   "frames": 6516,
+   "mean_after_30": 26.873901662925686
+  },
+  "fallback": null
+ },
+ "encoder_share_of_step": 0.19445128029661227,
+ "peak_memory_mb": {
+  "allocated": 6602.3701171875,
+  "reserved": 6980.0
+ }
+}

@@ -36,7 +36,7 @@ low-focus area, detected from the block-0 features, is reprocessed at full resol
 and the empty-map fallback are wrapped (plain ToMe / ALGM fallbacks become their protected forms, identical while
 nothing fires), and dense frames run an observer so the detector sees every frame. Rows count frames with surprise,
 the mean share of patches it reprocessed, and global frames.
-R40 redesign (`@exp-...`, `src/stage_b/expect.py`, name as `ExpectConfig.name`; with `sitome_...~algm_t...`): the
+R40 expectation focus map (`@exp-...`, `src/stage_b/expect.py`, name as `ExpectConfig.name`; with `sitome_...~algm_t...`): the
 map expects each tracked object at its centroid-shifted position; on the current frame (block 0) objects are
 relocalised by block matching, a speed-scaled ring and lost objects' search discs take the baseline's rules, and
 surprise (deviation from the previous frame's features moved by the camera) promotes out-of-focus patches (high when
@@ -64,6 +64,7 @@ from PIL import Image
 from torchvision.transforms import InterpolationMode
 from torchvision.transforms.functional import resize, to_tensor
 
+from src.stage_b.vos import rowio
 from src.stage_b.vos.eval import build
 
 LVOS = Path("/work/data/lvos")
@@ -177,9 +178,10 @@ def main(weights, out_dir, settings, max_seq=None, split="valid"):
         keep = set(Path(os.environ["VOS_SEQS"]).read_text().split())
         seqs = [x for x in seqs if x in keep]
     diag = os.environ.get("VOS_DIAG") == "1"
+    wanted = [x for x in settings.split(",") if x]
     for seq in seqs:
         f = out / "sequences" / f"{seq}.json"
-        if f.exists():
+        if rowio.done(f, wanted):                                     # complete and for these settings (else an error)
             continue
         try:
             os.close(os.open(out / "sequences" / f"{seq}.claim", os.O_CREAT | os.O_EXCL))
@@ -207,7 +209,14 @@ def main(weights, out_dir, settings, max_seq=None, split="valid"):
             base, *mods = spec.split("@")
             name, _, fb_name = base.partition("~")
             smalls = []                                                  # VOS_SAVE_SMALL (figures; reads only)
-            key = next((int(x[3:]) for x in mods if x.startswith("key")), None)
+            key = next((int(x[3:]) for x in mods if x.startswith("key") and x[3:].isdigit()), None)
+            lostkey = "lostkey" in mods                    # R40 Q: one dense I-frame when an object is newly lost
+            fbkey = next((int(x[5:]) for x in mods if x.startswith("fbkey") and x[5:].isdigit()), None)   # R40 Q: the
+            lostfb = "lostfb" in mods                      # same two resets with the fallback (plain merger) frame
+            iwrite, irefresh, iperm = "iwrite" in mods, "irefresh" in mods, "iperm" in mods   # R40 R: Cutie's memory
+            permN = next((int(x[4:]) for x in mods if x.startswith("perm") and x[4:].isdigit()), None)   # R40 Y: every N-th frame
+            gtobj = "gtobj" in mods                        # map-quality headroom: the expectation's object states from the ground truth
+            mem_events = 0                                 # on dense I-frames (write / refresh then write / permanent)
             hold = next((int(x[4:]) for x in mods if x.startswith("hold")), 1)
             history = []
             motion = "motion" in mods
@@ -220,10 +229,10 @@ def main(weights, out_dir, settings, max_seq=None, split="valid"):
             deg = [x for x in mods if x.startswith(("drop", "shift", "grow"))]                 # R33
             assert not deg or mapsrc == "gt", "map degradations apply to @gtmap only"
             srp = next((x for x in mods if x.startswith("srp_")), None)
-            expm = next((x for x in mods if x.startswith("exp-")), None)          # R40 redesign (`src/stage_b/expect.py`)
+            expm = next((x for x in mods if x.startswith("exp-")), None)          # R40 expectation focus map (`src/stage_b/expect.py`)
             membase = "membase" in mods                    # R40 M: frames Cutie writes to memory run the baseline (fallback)
             dense_next, extra_next, areas = False, None, {}
-            triggers, mem_frames, mem_dense, empty = 0, 0, 0, 0
+            triggers, mem_frames, mem_dense, empty, lost_prev, iframes, fb_iframes = 0, 0, 0, 0, set(), 0, 0
             idx_prev = idx_prev2 = None                                 # last two predicted index masks
             proc = InferenceCore(net, cfg=cfg)
             proc.max_internal_size = -1                              # resizing done here, as Cutie's video reader
@@ -245,12 +254,14 @@ def main(weights, out_dir, settings, max_seq=None, split="valid"):
                 motion = motion or ecfg.motion                         # the centroid shift enters the map itself
                 if ecfg.mbase:                                         # R40 M: motion at the search radius -> baseline
                     m_video.alt = fb.inner
+                if key or lostkey:                                     # R40 Q: I-frames run dense, and the
+                    observer = ExpectMap(None, estate, ecfg, passive=True)   # expectation still sees them
             assert not membase or (estate is not None and fb is not None), "@membase needs @exp and a fallback"
             membase_frames, mbase_frames = 0, 0
             graph2 = os.environ.get("VOS_GRAPH") == "2" and estate is not None   # R40 plan L: the frame runner does
             if graph2:                                                 # the map motion, object states and decision
-                assert enc is not None and not (key or hold > 1 or memkey or oracle or mapsrc or sig_a or sig_a2 or sig_b
-                                                or diag or membase or ecfg.mbase), "VOS_GRAPH=2 covers the redesign's own settings only"
+                assert enc is not None and not (key or lostkey or fbkey or lostfb or iwrite or irefresh or iperm or permN or gtobj or hold > 1 or memkey or oracle or mapsrc or sig_a or sig_a2 or sig_b
+                                                or diag or membase or ecfg.mbase or ecfg.fired_high or ecfg.esc or ecfg.hold), "VOS_GRAPH=2 covers the expectation focus map's own settings only"
                 enc.frame_setting, g2_reset = spec, True
             prev, fl, fallbacks = None, [], 0
             dlog = None
@@ -286,6 +297,9 @@ def main(weights, out_dir, settings, max_seq=None, split="valid"):
                 m = m_video
                 if m is not None and key and t % key == 0:
                     m = None
+                fb_reset = False
+                if m is not None and fbkey and t % fbkey == 0:          # R40 Q: a fallback frame as the reset
+                    m, fb_reset = fb, True
                 if m is not None and (memkey and will_mem or dense_next):
                     m = None
                 interest_mask = prev if graph2 else base_map()         # graph2: the motion is added in the runner
@@ -325,9 +339,19 @@ def main(weights, out_dir, settings, max_seq=None, split="valid"):
                     g2_reset = False
                 elif estate is not None:                                # run-time object states from t − 1 and t − 2
                     ids = [o for o, t0 in first.items() if t0 < t]
+                    if gtobj and t > 1 and gt_at(t - 1) is not None and gt_at(t - 2) is not None:
+                        lab1, lab2 = (resize(torch.from_numpy(gt_at(t - k).astype(np.int64)).cuda()[None], [h, w],
+                                             InterpolationMode.NEAREST)[0] for k in (1, 2))
+                        idx_prev, idx_prev2 = lab1, lab2           # a perfect tracker's last two masks (diagnostic, not a method)
+                        interest_mask = (lab1 > 0) | (mask > 0) if mask is not None else lab1 > 0
                     estate.objects, all_lost = objects_from_predictions(idx_prev, idx_prev2, ids, ostate, ecfg.motion) \
                         if idx_prev is not None else ([], False)
                     all_lost = all_lost and not new                    # a newly given mask is confidently tracked
+                    if lostkey or lostfb:                              # R40 Q: an object lost since the last frame
+                        now_lost = {o["id"] for o in estate.objects if o["lost"]}
+                        if m is not None and m is not fb and now_lost - lost_prev:
+                            m, fb_reset = (None, False) if lostkey else (fb, True)
+                        lost_prev = now_lost
                 if not graph2 and m is not None and getattr(m, "per_image", False) and (not interest_mask.any() or all_lost):
                     m, fallbacks = fb, fallbacks + 1                    # nothing confidently tracked: the baseline
                     fb_now = True
@@ -341,9 +365,22 @@ def main(weights, out_dir, settings, max_seq=None, split="valid"):
                 if observer is not None and m is None:                 # dense frame: the detector still sees it
                     m = observer
                 dense_now = m is None or (observer is not None and m is observer)
+                iframes += bool(dense_now and m_video is not None)
+                fb_iframes += fb_reset
                 if enc is not None:
                     enc.structure, enc.prev_mask, enc.interest = m, None if graph2 else interest_mask, None
-                prob = proc.step(img, mask, new if new else None, end=end)
+                iframe_now = bool(dense_now and (m_video is not None or (key and t % key == 0)))   # R40 V: the dense control gets the same schedule
+                perm_now = bool(permN and t % permN == 0 and not end)   # R40 Y: the frame is written to the permanent memory as it
+                if perm_now and not (iframe_now and (iwrite or irefresh or iperm)):   # was processed (no dense frame, no encoder change)
+                    proc.last_mem_ti = proc.curr_ti + 1 - proc.mem_every
+                    mem_events += 1
+                if iframe_now and (iwrite or irefresh or iperm) and not end:  # R40 R: memory on a dense I-frame
+                    if irefresh:
+                        proc.clear_non_permanent_memory()                 # keep the permanent memory (given masks)
+                    proc.last_mem_ti = proc.curr_ti + 1 - proc.mem_every  # this frame is written to memory
+                    mem_events += 1
+                prob = proc.step(img, mask, new if new else None, end=end,
+                                 force_permanent=bool((iperm and iframe_now and not end) or perm_now))
                 if enc is None:                                          # official Cutie (R30): dense only
                     fl.append(1.0)
                 elif graph2:
@@ -407,11 +444,12 @@ def main(weights, out_dir, settings, max_seq=None, split="valid"):
                             extra_next = ev
                 triggers += fired
                 jf_now = {}
-                if gt_t is not None:
-                    up = F.interpolate(prob[None], (H, W), mode="bilinear", align_corners=False)[0]
+                if gt_t is not None or (split == "v2_test" and masks.ON):     # test videos: no ground truth after the first
+                    up = F.interpolate(prob[None], (H, W), mode="bilinear", align_corners=False)[0]   # appearance; every frame is saved
                     pred = proc.output_prob_to_mask(up)
                     if masks.ON:                                         # plan O: official metrics (reads only)
                         masks.save(out, spec, seq, frames[t].stem, pred, pal)
+                if gt_t is not None:
                     gt = torch.from_numpy(gt_t.astype(np.int64)).cuda()
                     for o, t0 in first.items():
                         if t > t0:
@@ -426,7 +464,8 @@ def main(weights, out_dir, settings, max_seq=None, split="valid"):
                                {i: ob.id for i, ob in proc.object_manager.tmp_id_to_obj.items()}, g_eval, fl[-1],
                                fb_now, dense_now, not bool(interest_mask.any()), oracle_now, will_mem,
                                getattr(m, "fired_mask", None) if (det is not None or estate is not None) else None,
-                               jf_now)
+                               jf_now, tiers=getattr(m, "tiers", None) if estate is not None else None,
+                               cam=getattr(m, "cam", None) if estate is not None else None)
             if dlog is not None:
                 dlog.save()
             if graph2 and enc.frame_out is not None:                  # the frame runner's tier counts (device sums)
@@ -445,12 +484,13 @@ def main(weights, out_dir, settings, max_seq=None, split="valid"):
                          "srp_share": srp_share / max(1, len(fl)), "srp_global": srp_global,
                          "exp_high_share": exp_high / max(1, len(fl)), "exp_mid_share": exp_mid / max(1, len(fl)),
                          "exp_global": exp_global, "exp_lost_fallbacks": exp_lostfb,
-                         "membase_frames": membase_frames, "mbase_frames": mbase_frames})
+                         "membase_frames": membase_frames, "mbase_frames": mbase_frames,
+                         "iframes": iframes, "fb_iframes": fb_iframes, "mem_events": mem_events})
             print(f"{seq} {spec}: J&F {50 * (np.mean(rows[-1]['J']) + np.mean(rows[-1]['F'])):.1f} "
                   f"FLOPs {rows[-1]['flops_ratio']:.3f} fallback {fallbacks}", flush=True)
             del proc                                                 # return the cached GPU memory between settings,
             torch.cuda.empty_cache()                                 # so 4 workers fit the 16 GB GPU (R14 OOM)
-        f.write_text(json.dumps(rows))
+        rowio.write(f, rows)                                          # atomic: no partial row after an interruption
     print("done", flush=True)
 
 
