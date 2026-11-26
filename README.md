@@ -1,6 +1,6 @@
 # Focus maps for frozen ViTs in long-video object segmentation
 
-Code for the preprint *Focus Only on What's Important: Training-Free Focus Maps for Frozen Vision Transformers in Long-Video Object Segmentation* A frozen DINOv3 ViT replaces the stride-16 pixel encoder of the Cutie video object segmenter.
+Code for the preprint *Focus Only on What's Important: Training-Free Focus Maps for Frozen Vision Transformers in Long-Video Object Segmentation* ([arXiv:2611.34863](https://arxiv.org/abs/2611.34863)) A frozen DINOv3 ViT replaces the stride-16 pixel encoder of the Cutie video object segmenter.
 Before the encoder runs on a frame, a **focus map** decides how much compute each patch gets:
 
 - **Expectation (high tier, never merged).** Each tracked object is expected at its last mask moved by its centroid
@@ -107,7 +107,17 @@ weights and the evaluation toolkits are not redistributed here; their own licenc
 
 ## Citation
 
-See `CITATION.cff`. The arXiv identifier is added once the preprint is public.
+Paper: [arXiv:2611.34863](https://arxiv.org/abs/2611.34863) (v1, 25 November 2026). See also `CITATION.cff`.
+
+```bibtex
+@article{karipineni2026focus,
+  title   = {Focus Only on What's Important: Training-Free Focus Maps for Frozen Vision Transformers in Long-Video Object Segmentation},
+  author  = {Karipineni, Harsha and Chintha, Rajesh Reddy},
+  journal = {arXiv preprint arXiv:2611.34863},
+  year    = {2026},
+  url     = {https://arxiv.org/abs/2611.34863}
+}
+```
 
 ## Data terms
 The datasets are not redistributed. LVOS (V1 and V2): annotations CC BY 4.0, evaluation toolkits BSD-3-Clause, data for non-commercial research only; the videos come from VOT-LT 2019 and LaSOT and are not the organizers' property

@@ -1,16 +1,17 @@
 cff-version: 1.2.0
-message: "If you use this code, please cite the preprint."
+message: "If you use this code, please cite the preprint (arXiv:2611.34863)."
 title: "Focus Only on What's Important: Training-Free Focus Maps for Frozen Vision Transformers in Long-Video Object Segmentation"
 type: software
 license: Apache-2.0
 repository-code: "https://github.com/boletoms/focused-cv"
+url: "https://arxiv.org/abs/2611.34863"
 authors:
   - family-names: "Karipineni"
     given-names: "Harsha"
     affiliation: "Independent Researcher"
     email: "boletoms@gmail.com"
   - family-names: "Chintha"
-    given-names: "Rajesh"
+    given-names: "Rajesh Reddy"
     affiliation: "Independent Researcher"
     email: "chintharr@gmail.com"
 preferred-citation:
@@ -20,6 +21,11 @@ preferred-citation:
     - family-names: "Karipineni"
       given-names: "Harsha"
     - family-names: "Chintha"
-      given-names: "Rajesh"
-  journal: "arXiv preprint"
+      given-names: "Rajesh Reddy"
+  journal: "arXiv preprint arXiv:2611.34863"
   year: 2026
+  url: "https://arxiv.org/abs/2611.34863"
+  identifiers:
+    - type: other
+      value: "arXiv:2611.34863"
+      description: "arXiv identifier"
